@@ -14,48 +14,85 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
+import Axios from 'axios';
 // import { data, states } from './makeData.ts';
 
-const Admins = () => {
+const Admins = ({ 
+  Username,
+  setUsername,
+  Password,
+  setPassword,
+  PasswordConfirmation,
+  setPasswordConfirmation,}) => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   // const [tableData, setTableData] = useState(() => data);
-  const [tableData, setTableData] = useState([]);
+  const [Admin, setAdmin] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
-  
 
 
+  // const accessToken = '1|CdEsiPfDSynDabjezyqkUIMfeC7MQpLXnQUlbsTL';
 
-  useEffect(() => {
-    fetch('/api/admins')
-      .then((response) => response.json())
-      .then((data) => setTableData(data))
-      .catch((error) => console.error(error));
-  }, []);
-
-  const handleCreateNewRow = (values) => {
-    //send API create request here, then update local table data for re-render
-    fetch('/api/admins', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    })
-      .then((response) => response.json())
-      .then((newRow) => setTableData([...tableData, newRow]))
-      .catch((error) => console.error(error));
+  const Request = async () => {
+    try {
+      const response = await Axios.get("http://localhost:8000/api/admin");
+      const res = await response.data;
+      console.log(res);
+      setAdmin(res);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
+  useEffect(() => {
+    Request();
+  }, []);
+
+
+
+  // useEffect(() => {
+  //   fetch('/api/admins')
+  //     .then((response) => response.json())
+  //     .then((data) => setTableData(data))
+  //     .catch((error) => console.error(error));
+  // }, []);
+
+  const handleCreateNewRow = async () => {
+    const data = {
+      'username': Username,
+      'password': Password,
+      'password_confirmation': PasswordConfirmation,
+    };
+
+    try {
+      const res = await Axios.post(
+        `http://localhost:8000/api/admin`,
+        data,
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const response = await res.data;
+      console.log(response);
+      Request();
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
       //send API update request here, then update local table data for re-render
-      fetch(`/api/admins/${row.original.id}`, {
+      fetch(`/api/admin/${row.original.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       })
         .then((response) => response.json())
         .then(() => {
-          tableData[row.index] = values;
-          setTableData([...tableData]);
+          Admin[row.index] = values;
+          setAdmin([...Admin]);
           exitEditingMode(); //required to exit editing mode and close modal
         })
         .catch((error) => console.error(error));
@@ -67,12 +104,12 @@ const Admins = () => {
       //send API delete request here, then update local table data for re-render
       fetch(`/api/admins/${row.original.id}`, { method: 'DELETE' })
         .then(() => {
-          tableData.splice(row.index, 1);
-          setTableData([...tableData]);
+          Admin.splice(row.index, 1);
+          setAdmin([...Admin]);
         })
         .catch((error) => console.error(error));
     },
-    [tableData],
+    [Admin],
   );
 
   //rest of the code remains the same
@@ -144,7 +181,7 @@ const Admins = () => {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'user_id',
+        accessorKey: 'id',
         header: 'ID',
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
@@ -152,7 +189,7 @@ const Admins = () => {
         size: 80,
       },
       {
-        accessorKey: 'user_username',
+        accessorKey: 'username',
         header: 'Username',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
@@ -160,11 +197,12 @@ const Admins = () => {
         }),
       },
       {
-        accessorKey: 'user_is_super',
+        accessorKey: 'is_super',
         header: 'Role',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
             {
@@ -175,6 +213,7 @@ const Admins = () => {
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
         }),
+        
       },
       {
         accessorKey: 'updated_by',
@@ -185,40 +224,7 @@ const Admins = () => {
           type: 'string',
         }),
       },
-      {
-        accessorKey: 'deleted_by',
-        header: 'Deleted By',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
-      {
-        accessorKey: 'deleted_at',
-        header: 'Deleted At',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
-      // {
-      //   accessorKey: 'lastName',
-      //   header: 'Last Name',
-      //   size: 140,
-      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-      //     ...getCommonEditTextFieldProps(cell),
-      //   }),
-      // },
-      // {
-      //   accessorKey: 'email',
-      //   header: 'Email',
-      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-      //     ...getCommonEditTextFieldProps(cell),
-      //     type: 'email',
-      //   }),
-      // },
+ 
   
      
     ],
@@ -244,7 +250,7 @@ const Admins = () => {
         }),
       },
       {
-        accessorKey: 'confirmation_password',
+        accessorKey: 'password_confirmation',
         header: 'Confirm_Password',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
@@ -253,12 +259,12 @@ const Admins = () => {
       },
   
       {
-        accessorKey: 'isSuper',
+        accessorKey: 'is_super',
         header: 'Role',
         size: 80,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'number',
+          
         }),
       },
      
@@ -278,7 +284,7 @@ const Admins = () => {
           },
         }}
         columns={columns}
-        data={tableData}
+        data={Admin}
         editingMode="modal" //default
         enableColumnOrdering
         enableEditing
@@ -318,20 +324,28 @@ const Admins = () => {
   );
 };
 
-//example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
-  const [values, setValues] = useState(() =>
-    columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
-      return acc;
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, Username, Password, PasswordConfirmation, setUsername, setPassword, setPasswordConfirmation }) => {
+  const [values, setValues] = useState(() => ({
+    [Username]: '',
+    [Password]: '',
+    [PasswordConfirmation]: '',
+    ...columns.reduce((acc, column) => {
+        acc[column.accessorKey ?? ''] = '';
+        return acc;
     }, {}),
-  );
+}));
 
-  const handleSubmit = () => {
-    //put your validation logic here
-    onSubmit(values);
-    onClose();
-  };
+const handleSubmit = () => {
+  //put your validation logic here
+  onSubmit({
+      ...values,
+      [Username]: Username,
+      [Password]: Password,
+      [PasswordConfirmation]: PasswordConfirmation,
+  });
+  onClose();
+};
+
 
   return (
     <Dialog open={open}>
@@ -345,16 +359,31 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
               gap: '1.5rem',
             }}
           >
-            {columns.map((column) => (
-              <TextField
-                key={column.accessorKey}
-                label={column.header}
-                name={column.accessorKey}
-                onChange={(e) =>
-                  setValues({ ...values, [e.target.name]: e.target.value })
-                }
-              />
-            ))}
+            <TextField
+              key='Username'
+              label='Username'
+              name='Username'
+              value={Username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <TextField
+              key='Password'
+              label='Password'
+              name='Password'
+              type='password'
+              value={Password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <TextField
+              key='PasswordConfirmation'
+              label='Password Confirmation'
+              name='PasswordConfirmation'
+              type='password'
+              value={PasswordConfirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
+            />
+ 
+
           </Stack>
         </form>
       </DialogContent>
@@ -367,6 +396,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     </Dialog>
   );
 };
+
 
 const validateRequired = (value) => !!value.length;
 const validateEmail = (email) =>
