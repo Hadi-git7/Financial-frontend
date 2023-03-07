@@ -17,17 +17,16 @@ import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
 // import { data, states } from './makeData.ts';
 
-const Admins = ({ 
-  Username,
-  setUsername,
-  Password,
-  setPassword,
-  PasswordConfirmation,
-  setPasswordConfirmation,}) => {
+const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   // const [tableData, setTableData] = useState(() => data);
   const [Admin, setAdmin] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [Username,setUsername]=useState('');
+	const [Password,setPassword]=useState('');
+	const [PasswordConfirmation,setPasswordConfirmation]=useState('');
+
+
 
 
   // const accessToken = '1|CdEsiPfDSynDabjezyqkUIMfeC7MQpLXnQUlbsTL';
@@ -56,17 +55,16 @@ const Admins = ({
   //     .catch((error) => console.error(error));
   // }, []);
 
-  const handleCreateNewRow = async () => {
-    const data = {
-      'username': Username,
-      'password': Password,
-      'password_confirmation': PasswordConfirmation,
-    };
-
+   const handleCreateNewRow = async ({ exitEditingMode, row, values }) => {
+    // changed 'fetch' to 'Axios.post' and used variables set with useState instead of hardcoding the values
     try {
-      const res = await Axios.post(
+      const response = await Axios.post(
         `http://localhost:8000/api/admin`,
-        data,
+        {
+          'username': Username,
+          'password': Password,
+          'password_confirmation': PasswordConfirmation,
+        },
         {
           headers: {
             Authorization: "Bearer " + localStorage.getItem("token"),
@@ -74,11 +72,11 @@ const Admins = ({
           },
         }
       );
-      const response = await res.data;
-      console.log(response);
-      Request();
-    } catch (err) {
-      console.log(err);
+      //update state with new row
+      setAdmin([...Admin, response.data]);
+      exitEditingMode(); //required to exit editing mode and close modal
+    } catch (error) {
+      console.error(error);
     }
   };
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
@@ -319,12 +317,25 @@ const Admins = ({
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
+        setUsername ={setUsername}
+        Username ={Username}
+        Password ={Password}
+        setPassword ={setPassword}
+        setPasswordConfirmation ={setPasswordConfirmation}
+        PasswordConfirmation ={PasswordConfirmation}
+        Admin={Admin}
+        setAdmin = {setAdmin}
+
       />
     </>
   );
 };
 
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, Username, Password, PasswordConfirmation, setUsername, setPassword, setPasswordConfirmation }) => {
+// const consolling = ()=>{
+//   console.log("hello world")
+// }
+
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, Username, Password, PasswordConfirmation, setUsername, setPassword, setPasswordConfirmation, handleUser,Admin,setAdmin }) => {
   const [values, setValues] = useState(() => ({
     [Username]: '',
     [Password]: '',
@@ -335,23 +346,88 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, Userna
     }, {}),
 }));
 
-const handleSubmit = () => {
-  //put your validation logic here
-  onSubmit({
-      ...values,
-      [Username]: Username,
-      [Password]: Password,
-      [PasswordConfirmation]: PasswordConfirmation,
+ // update the values in the state when the props change
+ useEffect(() => {
+  setValues({
+    [Username]: Username,
+    [Password]: Password,
+    [PasswordConfirmation]: PasswordConfirmation,
   });
-  onClose();
+}, [Username, Password, PasswordConfirmation]);
+
+// const handleSubmit = (e) => {
+//   e.preventDefault();
+//   if (!Username || !Password || !PasswordConfirmation) {
+//     alert('Please fill in all fields');
+//     return;
+//   }
+
+//   if (Password !== PasswordConfirmation) {
+//     alert('Password and Password Confirmation do not match');
+//     return;
+//   }
+
+//   Axios.post('http://localhost:8000/api/admin', {
+//     username: Username,
+//     password: Password,
+//     password_confirmation: PasswordConfirmation
+//   })
+//     .then((res) => {
+//       console.log('Posting data', res);
+//       alert('Admin created successfully');
+//       onClose();
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       alert('Error creating admin');
+//     });
+// };
+
+// const postAdmin = (e) => {
+//   Axios.post("http://localhost:8000/api/admin",{
+//     username :Username,
+//     password : Password,
+//     password_confirmation : PasswordConfirmation
+//   }).then(res => console.log('Posting data', res)).catch(err => console.log(err))
+// }
+const postAdmin = async ({ exitEditingMode, row, values }) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/admin`,
+      {
+        body: JSON.stringify({
+          username: Username,
+          password: Password,
+          password_confirmation: PasswordConfirmation,
+        }),
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      }
+    );
+    const data = await response.json();
+    if (response.ok) {
+      Admin[row.index] = values;
+      setAdmin([...Admin]);
+      exitEditingMode(); //required to exit editing mode and close modal
+    } else {
+      throw new Error(data.message);
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Error creating admin");
+  }
 };
+
 
 
   return (
     <Dialog open={open}>
       <DialogTitle textAlign="center">Create New Admin</DialogTitle>
       <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
               width: '100%',
@@ -364,6 +440,9 @@ const handleSubmit = () => {
               label='Username'
               name='Username'
               value={Username}
+              variant='outlined'
+              type='text'
+              //onChange={(e) => setUsername(e.target.value)}
               onChange={(e) => setUsername(e.target.value)}
             />
             <TextField
@@ -372,6 +451,7 @@ const handleSubmit = () => {
               name='Password'
               type='password'
               value={Password}
+              variant='outlined'
               onChange={(e) => setPassword(e.target.value)}
             />
             <TextField
@@ -380,6 +460,7 @@ const handleSubmit = () => {
               name='PasswordConfirmation'
               type='password'
               value={PasswordConfirmation}
+              variant='outlined'
               onChange={(e) => setPasswordConfirmation(e.target.value)}
             />
  
@@ -389,7 +470,7 @@ const handleSubmit = () => {
       </DialogContent>
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button color="secondary" onClick={handleSubmit} variant="contained">
+        <Button color="secondary" onClick={postAdmin} variant="contained">
           Create New Admin
         </Button>
       </DialogActions>
