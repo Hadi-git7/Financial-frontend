@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MaterialReactTable from "material-react-table";
+import Axios from 'axios';
 import "../goal/goal.css"
 import {
   Box,
@@ -31,15 +32,33 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
+
 const Goal = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
 
-  const handleCreateNewRow = (values) => {
-    tableData.push(values);
-    setTableData([...tableData]);
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/goal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+  
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+   const handleCreateNewRow = useCallback((values) => {
+    setTableData([...tableData, values]);
+  }, [tableData]);
 
   const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
