@@ -217,10 +217,32 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     }, {}),
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
+    try {
+      console.log("token ",localStorage.getItem('token'));
+      const data = {
+        "username": values.username,
+        "password": values.is_super,
+        "password_confirmation": values.is_super
+      };
+
+      console.log(JSON.stringify(data));
+	  
+		  const res = await Axios.post("http://localhost:8000/api/admin", JSON.stringify(data), {
+        headers: {
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+		  });
+		  // Request();
+      onSubmit(values);
+      onClose();
+	  }
+    catch (err) {
+    console.log("error ",err);
+  }
   };
 
   return (
@@ -268,4 +290,4 @@ const validateEmail = (email) =>
     );
 const validateAge = (age) => age >= 18 && age <= 50;
 
-export default Admins;
+export default Admins;  
