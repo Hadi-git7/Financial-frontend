@@ -148,6 +148,61 @@ const Admins = () => {
           type: 'string',
         }),
       },
+      {
+        accessorKey: 'created_by',
+        header: 'Created By',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'string',
+        }),
+      },
+      {
+        accessorKey: 'updated_by',
+        header: 'Updated By',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'string',
+        }),
+      },
+      
+ 
+  
+     
+    ],
+    [getCommonEditTextFieldProps],
+  );
+
+  const Pop = useMemo(
+    () => [
+    
+      {
+        accessorKey: 'username',
+        header: 'Username',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        accessorKey: 'password',
+        header: 'Password',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'password',
+        }),
+      },
+      {
+        accessorKey: 'password_confirmation',
+        header: 'Password Confirmation',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'password',
+        }),
+      },
       
  
   
@@ -194,12 +249,12 @@ const Admins = () => {
             onClick={() => setCreateModalOpen(true)}
             variant="contained"
           >
-            Create New Account
+            Create New Admin
           </Button>
         )}
       />
       <CreateNewAccountModal
-        columns={columns}
+        columns={Pop}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
@@ -223,8 +278,8 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       console.log("token ",localStorage.getItem('token'));
       const data = {
         "username": values.username,
-        "password": values.is_super,
-        "password_confirmation": values.is_super
+        "password": values.password,
+        "password_confirmation": values.password_confirmation
       };
 
       console.log(JSON.stringify(data));
@@ -236,7 +291,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
           "Content-Type": "application/json",
         }
 		  });
-		  // Request();
+      window.location.reload();
       onSubmit(values);
       onClose();
 	  }
@@ -247,7 +302,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Account</DialogTitle>
+      <DialogTitle textAlign="center">Create New Admin</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
@@ -273,7 +328,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button color="secondary" onClick={handleSubmit} variant="contained">
-          Create New Account
+          Create New Admin
         </Button>
       </DialogActions>
     </Dialog>
