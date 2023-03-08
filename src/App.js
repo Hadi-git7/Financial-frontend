@@ -5,7 +5,7 @@ import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 import Dashboard from "./scenes/dashboard";
 import Admins from "./scenes/admins";
-import Payment from "./scenes/payments";
+import Income from "./scenes/incomes";
 import Categories from "./scenes/categories";
 import Goal from "./scenes/goal";
 import Calendar from "./scenes/calendar";
@@ -14,6 +14,7 @@ import Pie from "./scenes/pie";
 import Line from "./scenes/line";
 // import Axios from 'axios';
 import React  from "react";
+import Expense from "./scenes/expenses";
 
 
 function App() {
@@ -30,7 +31,8 @@ function App() {
 							<Route exact path="/" element={<Dashboard />} />
 
 							<Route path="/admins" element={<Admins/>} />
-							<Route path="/payments" element={<Payment />} />
+							<Route path="/income" element={<Income />} />
+							<Route path="/expense" element={<Expense />} />
 							<Route path="/categories" element={<Categories />} />
 							<Route path="/goal" element={<Goal />} />
 							<Route path="/calendar" element={<Calendar />} />

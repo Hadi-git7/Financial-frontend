@@ -16,7 +16,7 @@ import {
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
 
-const Payment = () => {
+const Income = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
@@ -27,7 +27,7 @@ const Payment = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/fixedpayment');
+      const response = await fetch('http://localhost:8000/api/income');
       if (!response.ok) {
         throw new Error('Failed to fetch data');
       }
@@ -58,7 +58,7 @@ const Payment = () => {
           category_title: values.category_title,
 
         };
-        const response = await fetch(`http://localhost:8000/api/fixedpayment/${row.original.id}`, {
+        const response = await fetch(`http://localhost:8000/api/income/${row.original.id}`, {
           method: 'PUT',
           headers: {
             'Accept': 'application/json', 
@@ -87,7 +87,7 @@ const Payment = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:8000/api/fixedpayment/${row.original.id}`, {
+      const response = await fetch(`http://localhost:8000/api/income/${row.original.id}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json', 
@@ -238,6 +238,25 @@ const Payment = () => {
           type: 'string',
         }),
       },
+      {
+        accessorKey: 'start_date',
+        header: 'Start Date',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
+        }),
+      },   {
+        accessorKey: 'end_date',
+        header: 'End Date',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
+        }),
+      },
     ],
     [getCommonEditTextFieldProps],
   );
@@ -294,6 +313,25 @@ const Payment = () => {
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
+        }),
+      },
+      {
+        accessorKey: 'start_date',
+        header: 'Start Date',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
+        }),
+      },   {
+        accessorKey: 'end_date',
+        header: 'End Date',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
         }),
       },
      
@@ -374,13 +412,15 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
         "currency": values.currency,
         "category_id" : values.category_id,
         "category_title" : values.category_title,
+        "start_date" : values.start_date,
+        "end_date" : values.end_date,
 
 
       };
 
       console.log(JSON.stringify(data));
 	  
-		  const res = await Axios.post("http://localhost:8000/api/fixedpayment", JSON.stringify(data), {
+		  const res = await Axios.post("http://localhost:8000/api/income", JSON.stringify(data), {
         headers: {
           'Accept': 'application/json', 
           "Authorization": "Bearer " + localStorage.getItem("token"),
@@ -442,4 +482,4 @@ const validateEmail = (email) =>
     );
 const validateAge = (age) => age >= 18 && age <= 50;
 
-export default Payment;
+export default Income;
