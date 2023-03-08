@@ -400,41 +400,64 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     }, {}),
   );
 
-  const handleSubmit = async() => {
-    //put your validation logic here
+  const handleSubmit = async () => {
     try {
-      console.log("token ",localStorage.getItem('token'));
-      const data = {
-        "title": values.title,
-        "description": values.description,
-        "type": values.type,
-        "amount": values.amount,
-        "currency": values.currency,
-        "category_id" : values.category_id,
-        "category_title" : values.category_title,
-        "start_date" : values.start_date,
-        "end_date" : values.end_date,
-
-
-      };
-
-      console.log(JSON.stringify(data));
-	  
-		  const res = await Axios.post("http://localhost:8000/api/expense", JSON.stringify(data), {
+      // Check if the category already exists
+      let category = await Axios.get(`http://localhost:8000/api/category?title=${values.category_title}`, {
         headers: {
-          'Accept': 'application/json', 
+          'Accept': 'application/json',
           "Authorization": "Bearer " + localStorage.getItem("token"),
           "Content-Type": "application/json",
         }
-		  });
+      });
+  
+      if (category.data.length === 0) {
+        // If the category does not exist, create a new category and add it to the database
+        const res = await Axios.post("http://localhost:8000/api/category", {
+          "title": values.category_title,
+
+        }, {
+          headers: {
+            'Accept': 'application/json',
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "application/json",
+          }
+        });
+        category = res.data;
+      } else {
+        category = category.data[0];
+      }
+  
+      // Create a new payment and associate it with the current admin and category
+      const data = {
+        "type": values.type,
+        "title": values.title,
+        "description": values.description,
+        "amount": values.amount,
+        "currency": values.currency,
+        "category_id": category.id,
+        "category_title": category.title,
+        "start_date": values.start_date,
+        "end_date": values.end_date,
+
+      };
+      
+      const res2 = await Axios.post("http://localhost:8000/api/expense", data, {
+        headers: {
+          'Accept': 'application/json',
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+      });
+  
       window.location.reload();
       onSubmit(values);
       onClose();
-	  }
-    catch (err) {
-    console.log("error ",err);
-  }
+    } catch (err) {
+      console.log("error ", err);
+    }
   };
+  
 
   return (
     <Dialog open={open}>

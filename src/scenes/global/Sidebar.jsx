@@ -6,9 +6,9 @@ import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import ReceiptIcon from '@mui/icons-material/Receipt';import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+import PaymentsIcon from '@mui/icons-material/Payments';
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
@@ -143,14 +143,14 @@ const Sidebar = () => {
                         <Item
                             title="Incomes"
                             to="/income"
-                            icon={<ReceiptOutlinedIcon />}
+                            icon={<PaymentsIcon />}
                             selected={selected}
                             setSelected={setSelected}
                         />
                            <Item
                             title="Expenses"
                             to="/expense"
-                            icon={<ReceiptOutlinedIcon />}
+                            icon={<ReceiptIcon />}
                             selected={selected}
                             setSelected={setSelected}
                         />
