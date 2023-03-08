@@ -162,6 +162,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -170,6 +171,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -178,6 +180,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -186,6 +189,8 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
         }),
       },
       {
@@ -245,6 +250,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -253,6 +259,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -261,6 +268,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -269,6 +277,7 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'number',
         }),
       },
       {
@@ -421,6 +430,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     </Dialog>
   );
 };
+
 
 const validateRequired = (value) => !!value.length;
 const validateEmail = (email) =>
