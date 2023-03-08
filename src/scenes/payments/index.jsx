@@ -14,101 +14,106 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-// import { data, states } from './makeData.ts';
+import Axios from 'axios';
 
 const Payment = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  // const [tableData, setTableData] = useState(() => data);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   
 
 
 
-  useEffect(() => {
-    fetch('/api/payments')
-      .then((response) => response.json())
-      .then((data) => setTableData(data))
-      .catch((error) => console.error(error));
+
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/fixedpayment');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
-  const handleCreateNewRow = (values) => {
-    //send API create request here, then update local table data for re-render
-    fetch('/api/payments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    })
-      .then((response) => response.json())
-      .then((newRow) => setTableData([...tableData, newRow]))
-      .catch((error) => console.error(error));
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
+  const handleCreateNewRow = useCallback((values) => {
+    setTableData([...tableData, values]);
+  }, [tableData]);
+
+  const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
-      //send API update request here, then update local table data for re-render
-      fetch(`/api/payments/${row.original.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-        .then((response) => response.json())
-        .then(() => {
-          tableData[row.index] = values;
-          setTableData([...tableData]);
-          exitEditingMode(); //required to exit editing mode and close modal
-        })
-        .catch((error) => console.error(error));
+      try {
+        const body = {
+          title: values.title,
+          description: values.description,
+          type: values.type,
+          amount: values.amount,
+          currency: values.currency,
+          category_title: values.category_title,
+
+        };
+        const response = await fetch(`http://localhost:8000/api/fixedpayment/${row.original.id}`, {
+          method: 'PUT',
+          headers: {
+            'Accept': 'application/json', 
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update row');
+        }
+        const data = await response.json();
+        // update local table data
+        const newData = [...tableData];
+        newData[row.index] = data;
+        setTableData(newData);
+        exitEditingMode(); //required to exit editing mode and close modal
+      } catch (error) {
+        console.error(error);
+      }
     }
-  };
+  }, [tableData, validationErrors]);
 
-  const handleDeleteRow = useCallback(
-    (row) => {
-      //send API delete request here, then update local table data for re-render
-      fetch(`/api/payments/${row.original.id}`, { method: 'DELETE' })
-        .then(() => {
-          tableData.splice(row.index, 1);
-          setTableData([...tableData]);
-        })
-        .catch((error) => console.error(error));
-    },
-    [tableData],
-  );
+  const handleDeleteRow = useCallback(async (row) => {
+    if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8000/api/fixedpayment/${row.original.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+      
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete row');
+      }
+      // update local table data
+      const newData = [...tableData];
+      newData.splice(row.index, 1);
+      setTableData(newData);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [tableData]);
 
-  //rest of the code remains the same
-
-
-  // const handleCreateNewRow = (values) => {
-  //   tableData.push(values);
-  //   setTableData([...tableData]);
-  // };
-
-  // const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-  //   if (!Object.keys(validationErrors).length) {
-  //     tableData[row.index] = values;
-  //     //send/receive api updates here, then refetch or update local table data for re-render
-  //     setTableData([...tableData]);
-  //     exitEditingMode(); //required to exit editing mode and close modal
-  //   }
-  // };
 
   const handleCancelRowEdits = () => {
     setValidationErrors({});
   };
 
-  // const handleDeleteRow = useCallback(
-  //   (row) => {
-  //     // if (
-  //     //   !confirm(`Are you sure you want to delete ${row.getValue('firstName')}`)
-  //     // ) {
-  //     //   return;
-  //     // }
-  //     //send api delete request here, then refetch or update local table data for re-render
-  //     tableData.splice(row.index, 1);
-  //     setTableData([...tableData]);
-  //   },
-  //   [tableData],
-  // );
 
   const getCommonEditTextFieldProps = useCallback(
     (cell) => {
@@ -144,7 +149,7 @@ const Payment = () => {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'payment_id',
+        accessorKey: 'id',
         header: 'ID',
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
@@ -152,11 +157,12 @@ const Payment = () => {
         size: 80,
       },
       {
-        accessorKey: 'payment_title',
+        accessorKey: 'title',
         header: 'Title',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -165,26 +171,30 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
-        accessorKey: 'payment_description',
+        accessorKey: 'description',
         header: 'Description',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
-        accessorKey: 'payment_amount',
+        accessorKey: 'amount',
         header: 'Amount',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+
         }),
       },
       {
-        accessorKey: 'payment_currency',
+        accessorKey: 'currency',
         header: 'Currency',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -228,24 +238,6 @@ const Payment = () => {
           type: 'string',
         }),
       },
-      {
-        accessorKey: 'deleted_by',
-        header: 'Deleted By',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
-      {
-        accessorKey: 'deleted_at',
-        header: 'Deleted At',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
     ],
     [getCommonEditTextFieldProps],
   );
@@ -253,19 +245,21 @@ const Payment = () => {
     () => [
     
       {
-        accessorKey: 'payment_title',
+        accessorKey: 'title',
         header: 'Title',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
-        accessorKey: 'payment_description',
+        accessorKey: 'description',
         header: 'Description',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
@@ -274,18 +268,20 @@ const Payment = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
       {
-        accessorKey: 'payment_amount',
+        accessorKey: 'amount',
         header: 'Amount',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'number',
         }),
       },
       {
-        accessorKey: 'payment_currency',
+        accessorKey: 'currency',
         header: 'Currency',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -366,10 +362,38 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     }, {}),
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
+    try {
+      console.log("token ",localStorage.getItem('token'));
+      const data = {
+        "title": values.title,
+        "description": values.description,
+        "type": values.type,
+        "amount": values.amount,
+        "currency": values.currency,
+        "category_id" : values.category_id,
+        "category_title" : values.category_title,
+
+
+      };
+
+      console.log(JSON.stringify(data));
+	  
+		  const res = await Axios.post("http://localhost:8000/api/fixedpayment", JSON.stringify(data), {
+        headers: {
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+		  });
+      window.location.reload();
+      onSubmit(values);
+      onClose();
+	  }
+    catch (err) {
+    console.log("error ",err);
+  }
   };
 
   return (
@@ -406,6 +430,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     </Dialog>
   );
 };
+
 
 const validateRequired = (value) => !!value.length;
 const validateEmail = (email) =>

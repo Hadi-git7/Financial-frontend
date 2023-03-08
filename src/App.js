@@ -24,7 +24,7 @@ function App() {
 				<div className="app">
 					<Sidebar />
 					<main className="content">
-						<Topbar />
+						{/* <Topbar /> */}
 						<Routes>
 							<Route exact path="/" element={<Dashboard />} />
 							<Route path="/admins" element={<Admins />} />

@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
+import Topbar from '../global/Topbar';
 
 const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -231,6 +232,7 @@ const Admins = () => {
 
   return (
     <>
+    <Topbar />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {
