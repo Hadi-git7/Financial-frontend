@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialReactTable from 'material-react-table';
 import {
   Box,
@@ -8,162 +8,121 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  // MenuItem,
+  MenuItem,
   Stack,
   TextField,
   Tooltip,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
-// import { data, states } from './makeData.ts';
 
 const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  // const [tableData, setTableData] = useState(() => data);
-  const [Admin, setAdmin] = useState([]);
+  const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
-  const [Username,setUsername]=useState('');
-	const [Password,setPassword]=useState('');
-	const [PasswordConfirmation,setPasswordConfirmation]=useState('');
 
-
-
-
-  // const accessToken = '1|CdEsiPfDSynDabjezyqkUIMfeC7MQpLXnQUlbsTL';
-
-  const Request = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const response = await Axios.get("http://localhost:8000/api/admin");
-      const res = await response.data;
-      console.log(res);
-      setAdmin(res);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  useEffect(() => {
-    Request();
-  }, []);
-
-
-
-  // useEffect(() => {
-  //   fetch('/api/admins')
-  //     .then((response) => response.json())
-  //     .then((data) => setTableData(data))
-  //     .catch((error) => console.error(error));
-  // }, []);
-
-   const handleCreateNewRow = async ({ exitEditingMode, row, values }) => {
-    // changed 'fetch' to 'Axios.post' and used variables set with useState instead of hardcoding the values
-    try {
-      const response = await Axios.post(
-        `http://localhost:8000/api/admin`,
-        {
-          'username': Username,
-          'password': Password,
-          'password_confirmation': PasswordConfirmation,
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      //update state with new row
-      setAdmin([...Admin, response.data]);
-      exitEditingMode(); //required to exit editing mode and close modal
+      const response = await fetch('http://localhost:8000/api/admin');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
     } catch (error) {
       console.error(error);
     }
-  };
-  const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleCreateNewRow = useCallback((values) => {
+    setTableData([...tableData, values]);
+  }, [tableData]);
+
+  const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
-      //send API update request here, then update local table data for re-render
-      fetch(`/api/admin/${row.original.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-        .then((response) => response.json())
-        .then(() => {
-          Admin[row.index] = values;
-          setAdmin([...Admin]);
-          exitEditingMode(); //required to exit editing mode and close modal
-        })
-        .catch((error) => console.error(error));
+      try {
+        const body = {
+          username: values.username,
+          password: values.password,
+          password_confirmation: values.password_confirmation
+        };
+        const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
+          method: 'PUT',
+          headers: {
+            'Accept': 'application/json', 
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update row');
+        }
+        const data = await response.json();
+        // update local table data
+        const newData = [...tableData];
+        newData[row.index] = data;
+        setTableData(newData);
+        exitEditingMode(); //required to exit editing mode and close modal
+      } catch (error) {
+        console.error(error);
+      }
     }
-  };
+  }, [tableData, validationErrors]);
 
-  const handleDeleteRow = useCallback(
-    (row) => {
-      //send API delete request here, then update local table data for re-render
-      fetch(`/api/admins/${row.original.id}`, { method: 'DELETE' })
-        .then(() => {
-          Admin.splice(row.index, 1);
-          setAdmin([...Admin]);
-        })
-        .catch((error) => console.error(error));
-    },
-    [Admin],
-  );
-
-  //rest of the code remains the same
-
-
-  // const handleCreateNewRow = (values) => {
-  //   tableData.push(values);
-  //   setTableData([...tableData]);
-  // };
-
-  // const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-  //   if (!Object.keys(validationErrors).length) {
-  //     tableData[row.index] = values;
-  //     //send/receive api updates here, then refetch or update local table data for re-render
-  //     setTableData([...tableData]);
-  //     exitEditingMode(); //required to exit editing mode and close modal
-  //   }
-  // };
-
-  const handleCancelRowEdits = () => {
+  const handleCancelRowEdits = useCallback(() => {
     setValidationErrors({});
-  };
+  }, []);
 
-  // const handleDeleteRow = useCallback(
-  //   (row) => {
-  //     // if (
-  //     //   !confirm(`Are you sure you want to delete ${row.getValue('firstName')}`)
-  //     // ) {
-  //     //   return;
-  //     // }
-  //     //send api delete request here, then refetch or update local table data for re-render
-  //     tableData.splice(row.index, 1);
-  //     setTableData([...tableData]);
-  //   },
-  //   [tableData],
-  // );
+  const handleDeleteRow = useCallback(async (row) => {
+    if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+      
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete row');
+      }
+      // update local table data
+      const newData = [...tableData];
+      newData.splice(row.index, 1);
+      setTableData(newData);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [tableData]);
 
-  const getCommonEditTextFieldProps = useCallback(
-    (cell) => {
-      return {
-        error: !!validationErrors[cell.id],
-        helperText: validationErrors[cell.id],
-        onBlur: (event) => {
-          const isValid =
-            cell.column.id === 'email'
-              ? validateEmail(event.target.value)
-              : cell.column.id === 'age'
-              ? validateAge(+event.target.value)
-              : validateRequired(event.target.value);
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
+  const getCommonEditTextFieldProps = useCallback((cell) => {
+    return {
+      error: !!validationErrors[cell.id],
+      helperText: validationErrors[cell.id],
+      onBlur: (event) => {
+        const isValid =
+          cell.column.id === 'email'
+            ? validateEmail(event.target.value)
+            : cell.column.id === 'age'
+            ? validateAge(+event.target.value)
+            : validateRequired(event.target.value);
+        if (!isValid) {
+          //set validation error for cell if invalid
+          setValidationErrors({
+            ...validationErrors,
+            [cell.id]: `${cell.column.columnDef.header} is required`,
+          });
+        } else {
             //remove validation error for cell if valid
             delete validationErrors[cell.id];
             setValidationErrors({
@@ -203,31 +162,33 @@ const Admins = () => {
           type: 'string',
         }),
       },
-            {
+      {
         accessorKey: 'created_by',
         header: 'Created By',
-        size: 80,
+        size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
+          
         }),
-        
       },
       {
         accessorKey: 'updated_by',
         header: 'Updated By',
-        size: 80,
+        size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
         }),
       },
+      
  
   
      
     ],
     [getCommonEditTextFieldProps],
   );
+
   const Pop = useMemo(
     () => [
     
@@ -245,24 +206,16 @@ const Admins = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'password',
         }),
       },
       {
         accessorKey: 'password_confirmation',
-        header: 'Confirm_Password',
+        header: 'Password Confirmation',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-  
-      {
-        accessorKey: 'is_super',
-        header: 'Role',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          
+          type: 'password',
         }),
       },
      
@@ -282,7 +235,7 @@ const Admins = () => {
           },
         }}
         columns={columns}
-        data={Admin}
+        data={tableData}
         editingMode="modal" //default
         enableColumnOrdering
         enableEditing
@@ -317,117 +270,53 @@ const Admins = () => {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
-        setUsername ={setUsername}
-        Username ={Username}
-        Password ={Password}
-        setPassword ={setPassword}
-        setPasswordConfirmation ={setPasswordConfirmation}
-        PasswordConfirmation ={PasswordConfirmation}
-        Admin={Admin}
-        setAdmin = {setAdmin}
-
       />
     </>
   );
 };
 
-// const consolling = ()=>{
-//   console.log("hello world")
-// }
-
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, Username, Password, PasswordConfirmation, setUsername, setPassword, setPasswordConfirmation, handleUser,Admin,setAdmin }) => {
-  const [values, setValues] = useState(() => ({
-    [Username]: '',
-    [Password]: '',
-    [PasswordConfirmation]: '',
-    ...columns.reduce((acc, column) => {
-        acc[column.accessorKey ?? ''] = '';
-        return acc;
+//example of creating a mui dialog modal for creating new rows
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
+  const [values, setValues] = useState(() =>
+    columns.reduce((acc, column) => {
+      acc[column.accessorKey ?? ''] = '';
+      return acc;
     }, {}),
-}));
+  );
 
- // update the values in the state when the props change
- useEffect(() => {
-  setValues({
-    [Username]: Username,
-    [Password]: Password,
-    [PasswordConfirmation]: PasswordConfirmation,
-  });
-}, [Username, Password, PasswordConfirmation]);
+  const handleSubmit = async() => {
+    //put your validation logic here
+    try {
+      console.log("token ",localStorage.getItem('token'));
+      const data = {
+        "username": values.username,
+        "password": values.password,
+        "password_confirmation": values.password_confirmation
+      };
 
-// const handleSubmit = (e) => {
-//   e.preventDefault();
-//   if (!Username || !Password || !PasswordConfirmation) {
-//     alert('Please fill in all fields');
-//     return;
-//   }
-
-//   if (Password !== PasswordConfirmation) {
-//     alert('Password and Password Confirmation do not match');
-//     return;
-//   }
-
-//   Axios.post('http://localhost:8000/api/admin', {
-//     username: Username,
-//     password: Password,
-//     password_confirmation: PasswordConfirmation
-//   })
-//     .then((res) => {
-//       console.log('Posting data', res);
-//       alert('Admin created successfully');
-//       onClose();
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       alert('Error creating admin');
-//     });
-// };
-
-// const postAdmin = (e) => {
-//   Axios.post("http://localhost:8000/api/admin",{
-//     username :Username,
-//     password : Password,
-//     password_confirmation : PasswordConfirmation
-//   }).then(res => console.log('Posting data', res)).catch(err => console.log(err))
-// }
-const postAdmin = async ({ exitEditingMode, row, values }) => {
-  try {
-    const response = await fetch(
-      `http://localhost:8000/api/admin`,
-      {
-        body: JSON.stringify({
-          username: Username,
-          password: Password,
-          password_confirmation: PasswordConfirmation,
-        }),
+      console.log(JSON.stringify(data));
+	  
+		  const res = await Axios.post("http://localhost:8000/api/admin", JSON.stringify(data), {
         headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
           "Content-Type": "application/json",
-        },
-        method: "POST",
-      }
-    );
-    const data = await response.json();
-    if (response.ok) {
-      Admin[row.index] = values;
-      setAdmin([...Admin]);
-      exitEditingMode(); //required to exit editing mode and close modal
-    } else {
-      throw new Error(data.message);
-    }
-  } catch (error) {
-    console.error(error);
-    alert("Error creating admin");
+        }
+		  });
+      window.location.reload();
+      onSubmit(values);
+      onClose();
+	  }
+    catch (err) {
+    console.log("error ",err);
   }
-};
-
-
+  };
 
   return (
     <Dialog open={open}>
       <DialogTitle textAlign="center">Create New Admin</DialogTitle>
       <DialogContent>
-      <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
               width: '100%',
@@ -435,49 +324,28 @@ const postAdmin = async ({ exitEditingMode, row, values }) => {
               gap: '1.5rem',
             }}
           >
-            <TextField
-              key='Username'
-              label='Username'
-              name='Username'
-              value={Username}
-              variant='outlined'
-              type='text'
-              //onChange={(e) => setUsername(e.target.value)}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <TextField
-              key='Password'
-              label='Password'
-              name='Password'
-              type='password'
-              value={Password}
-              variant='outlined'
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <TextField
-              key='PasswordConfirmation'
-              label='Password Confirmation'
-              name='PasswordConfirmation'
-              type='password'
-              value={PasswordConfirmation}
-              variant='outlined'
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-            />
- 
-
+            {columns.map((column) => (
+              <TextField
+                key={column.accessorKey}
+                label={column.header}
+                name={column.accessorKey}
+                onChange={(e) =>
+                  setValues({ ...values, [e.target.name]: e.target.value })
+                }
+              />
+            ))}
           </Stack>
         </form>
       </DialogContent>
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button color="secondary" onClick={postAdmin} variant="contained">
+        <Button color="secondary" onClick={handleSubmit} variant="contained">
           Create New Admin
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
-
 
 const validateRequired = (value) => !!value.length;
 const validateEmail = (email) =>
@@ -489,4 +357,4 @@ const validateEmail = (email) =>
     );
 const validateAge = (age) => age >= 18 && age <= 50;
 
-export default Admins;
+export default Admins;  
