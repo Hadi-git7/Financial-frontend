@@ -176,36 +176,7 @@ const columns = useMemo(
         ...getCommonEditTextFieldProps(cell),
         type: 'string',
       }),
-    },
-    {
-      accessorKey: 'created_at',
-      header: 'Created_at',
-      size: 80,
-      muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-        ...getCommonEditTextFieldProps(cell),
-        type: 'string',
-      }),
-    },
-    {
-      accessorKey: 'updated_at',
-      header: 'Updated_at',
-      size: 80,
-      muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-        ...getCommonEditTextFieldProps(cell),
-        type: 'string',
-      }),
-    },
-    {
-      accessorKey: 'actions',
-      header: 'Actions',
-      size: 80,
-      muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-        ...getCommonEditTextFieldProps(cell),
-        type: 'string',
-      }),
-    },
-
-    
+    }, 
   ],
   [getCommonEditTextFieldProps],
 );
