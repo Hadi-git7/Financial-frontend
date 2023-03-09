@@ -8,13 +8,14 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ReceiptIcon from '@mui/icons-material/Receipt';import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
-import PaymentsIcon from '@mui/icons-material/Payments';
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import FinanceImage from "../../assets/Finance.jpg";
 import CategoryIcon from '@mui/icons-material/Category';
 import FlagIcon from '@mui/icons-material/Flag';
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
     const theme = useTheme();
@@ -143,7 +144,7 @@ const Sidebar = () => {
                         <Item
                             title="Incomes"
                             to="/income"
-                            icon={<PaymentsIcon />}
+                            icon={<PointOfSaleIcon />}
                             selected={selected}
                             setSelected={setSelected}
                         />

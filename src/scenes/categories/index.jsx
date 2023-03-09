@@ -278,13 +278,8 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit}) => {
           "Authorization": "Bearer " + localStorage.getItem("token"),
           'Content-Type': 'application/json'  ,
               }
-        // headers: { 
-        //   'Accept': 'application/json', 
-        //   'Authorization': 'Bearer 1|ezWKYPKQFbEemJevE4D5OHMOvaVe5VNSx6pil18k', 
-        //   'Content-Type': 'application/x-www-form-urlencoded'
-        // },
+       
 		  });
-		  // Request();
       onSubmit(values);
       onClose();
 	  }

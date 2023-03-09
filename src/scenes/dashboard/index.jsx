@@ -2,9 +2,7 @@ import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import EmailIcon from "@mui/icons-material/Email";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import TrafficIcon from "@mui/icons-material/Traffic";
 import Header from "../../components/Header";
 import LineChart from "../../components/LineChart";
@@ -12,12 +10,20 @@ import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
-import React, { useCallback,  useEffect } from 'react';
+import React, { useCallback,useState,  useEffect } from 'react';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CategoryIcon from '@mui/icons-material/Category';
+
+
 
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [totalIncome,setTotaIncome] = useState('');
+  const [totalExpense,setTotalExpense] = useState('');
+  const [numCategories, setNumCategories] = useState('');
+
 
   const fetchIncome = useCallback(async () => {
     try {
@@ -26,6 +32,8 @@ const Dashboard = () => {
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
+      const totalAmount = data.reduce((acc, { amount }) => acc + parseFloat(amount), 0);
+      setTotaIncome(totalAmount); // assuming you have a state variable called "totalIncome"
       console.log(data)
     } catch (error) {
       console.error(error);
@@ -43,6 +51,8 @@ const Dashboard = () => {
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
+      const totalAmount = data.reduce((acc, { amount }) => acc + parseFloat(amount), 0);
+      setTotalExpense(totalAmount); // assuming you have a state variable called "totalExpense"
       console.log(data)
     } catch (error) {
       console.error(error);
@@ -52,7 +62,6 @@ const Dashboard = () => {
     fetchExpenses();
   }, [fetchExpenses]);
 
-
   const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8000/api/category');
@@ -60,16 +69,17 @@ const Dashboard = () => {
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
-      console.log(data)
+      setNumCategories(data.length); // Set the number of categories in state
     } catch (error) {
       console.error(error);
     }
   }, []);
-
-
+  
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+  
+  
 
   const fetchGoal = useCallback(async () => {
     try {
@@ -127,29 +137,10 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="12,361"
-            subtitle="Emails Sent"
+            title={`$${totalIncome}`}
+            subtitle="Total Income"
             progress="0.75"
             increase="+14%"
-            icon={
-              <EmailIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="431,225"
-            subtitle="Sales Obtained"
-            progress="0.50"
-            increase="+21%"
             icon={
               <PointOfSaleIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -165,12 +156,12 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="32,441"
-            subtitle="New Clients"
-            progress="0.30"
-            increase="+5%"
+            title={`$${totalExpense}`}
+            subtitle="Total Expense"
+            progress="0.50"
+            increase="+21%"
             icon={
-              <PersonAddIcon
+              <ReceiptIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
@@ -183,9 +174,26 @@ const Dashboard = () => {
           alignItems="center"
           justifyContent="center"
         >
+        <StatBox
+          title={`${numCategories}`}
+          subtitle="Categories"
+          icon={
+            <CategoryIcon
+            sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+            />
+          }
+        />
+        </Box>
+        <Box
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
           <StatBox
             title="1,325,134"
-            subtitle="Traffic Inbound"
+            subtitle="Profit"
             progress="0.80"
             increase="+43%"
             icon={

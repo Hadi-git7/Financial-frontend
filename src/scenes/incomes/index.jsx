@@ -441,7 +441,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
 
       };
       
-      const res2 = await Axios.post("http://localhost:8000/api/expense", data, {
+      const res2 = await Axios.post("http://localhost:8000/api/income", data, {
         headers: {
           'Accept': 'application/json',
           "Authorization": "Bearer " + localStorage.getItem("token"),
