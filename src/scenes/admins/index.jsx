@@ -293,12 +293,12 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       },
       body: JSON.stringify(values),
     })
-      .then((response) => {
-        console.log(response);
-        return response.json();
-      })
+    .then((response) => {
+      console.log(response);
+      return response.json();
+    })
       .then((data) => {
-        console.log(data);
+        console.log(data);ody: JSON.stringify(values),
         onSubmit(data); //pass the new data to onSubmit function
       })
       .catch((error) => {

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MaterialReactTable from "material-react-table";
-import Axios from 'axios';
-import "../goal/goal.css"
+import Axios from "axios";
+import "../goal/goal.css";
 import {
   Box,
   Button,
@@ -17,74 +17,132 @@ import {
 } from "@mui/material";
 
 import { Delete, Edit } from "@mui/icons-material";
-import { styled } from '@mui/material/styles';
-import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
+import { styled } from "@mui/material/styles";
+import LinearProgress, {
+  linearProgressClasses,
+} from "@mui/material/LinearProgress";
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   height: 15,
   borderRadius: 2,
   [`&.${linearProgressClasses.colorPrimary}`]: {
-    backgroundColor: theme.palette.grey[theme.palette.mode === 'light' ? 200 : 800],
+    backgroundColor:
+      theme.palette.grey[theme.palette.mode === "light" ? 200 : 800],
   },
   [`& .${linearProgressClasses.bar}`]: {
     borderRadius: 2,
-    backgroundColor: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8',
+    backgroundColor: theme.palette.mode === "light" ? "#1a90ff" : "#308fe8",
   },
 }));
-
 
 const Goal = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true; // set a flag to check if the component is mounted
+
+    fetchData();
+
+    return () => {
+      isMounted = false; // set the flag to false when the component unmounts
+    };
+  }, []);
+
+  const handleCreateNewRow = useCallback(
+    (values) => {
+      setTableData([...tableData, values]);
+    },
+    [tableData]
+  );
+
+  const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/goal');
+      const response = await fetch("http://localhost:8000/api/goal");
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error("Network response was not ok");
       }
-      const data = await response.json();
-      setTableData(data);
+      const jsonData = await response.json();
+      // setData(jsonData);
+      setTableData(jsonData);
     } catch (error) {
       console.error(error);
     }
-  }, []);
-  
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-
-   const handleCreateNewRow = useCallback((values) => {
-    setTableData([...tableData, values]);
-  }, [tableData]);
-
-  const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-    if (!Object.keys(validationErrors).length) {
-      tableData[row.index] = values;
-      //send/receive api updates here, then refetch or update local table data for re-render
-      setTableData([...tableData]);
-      exitEditingMode(); //required to exit editing mode and close modal
-    }
   };
+
+  const handleSaveRowEdits = useCallback(
+    async ({ exitEditingMode, row, values }) => {
+      if (!Object.keys(validationErrors).length) {
+        try {
+          // create a new object with only the desired fields
+          const editedValues = {
+            profit: values.profit,
+            year: values.year,
+          };
+
+          const response = await fetch(
+            `http://localhost:8000/api/goal/${row.original.id}`,
+            {
+              method: "PUT",
+              headers: {
+                Accept: "application/json",
+                Authorization: "Bearer " + localStorage.getItem("token"),
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(editedValues),
+            }
+          );
+          if (!response.ok) {
+            throw new Error("Failed to update row");
+          }
+          const data = await response.json();
+          // update local table data
+          const newData = [...tableData];
+          newData[row.index] = data;
+          setTableData(newData);
+          exitEditingMode(); //required to exit editing mode and close modal
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    },
+    [tableData, validationErrors]
+  );
 
   const handleCancelRowEdits = () => {
     setValidationErrors({});
   };
 
   const handleDeleteRow = useCallback(
-    (row) => {
+    async (row) => {
       if (
-        !window.confirm(
-          `Are you sure you want to delete ${row.getValue("firstName")}`
-        )
+        !window.confirm(`Are you sure you want to delete ${row.original.id}`)
       ) {
         return;
       }
-      //send api delete request here, then refetch or update local table data for re-render
-      tableData.splice(row.index, 1);
-      setTableData([...tableData]);
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/goal/${row.original.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Accept: "application/json",
+              Authorization: "Bearer " + localStorage.getItem("token"),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to delete row");
+        }
+        // update local table data
+        const newData = [...tableData];
+        newData.splice(row.index, 1);
+        setTableData(newData);
+      } catch (error) {
+        console.error(error);
+      }
     },
     [tableData]
   );
@@ -165,7 +223,7 @@ const Goal = () => {
         }),
       },
       {
-        accessorKey: "profitCalculated",
+        accessorKey: "profit_calculated",
         header: "Profit Calculated",
         size: 80,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
@@ -174,7 +232,7 @@ const Goal = () => {
         }),
       },
       {
-        accessorKey: "id",
+        accessorKey: "admin_id",
         header: "Admin ID",
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
@@ -182,7 +240,7 @@ const Goal = () => {
         size: 80,
       },
       {
-        accessorKey: "createdBy",
+        accessorKey: "created_by",
         header: "Created By",
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -190,7 +248,7 @@ const Goal = () => {
         }),
       },
       {
-        accessorKey: "updatedBy",
+        accessorKey: "updated_by",
         header: "Updated By",
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -198,7 +256,7 @@ const Goal = () => {
         }),
       },
       {
-        accessorKey: "deletedBy",
+        accessorKey: "deleted_by",
         header: "Deleted By",
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -209,12 +267,36 @@ const Goal = () => {
     [getCommonEditTextFieldProps]
   );
 
+  const pop = useMemo(
+    () => [
+      {
+        accessorKey: "profit",
+        header: "Profit",
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: "number",
+        }),
+      },
+      {
+        accessorKey: "year",
+        header: "Year",
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+          type: "number",
+        }),
+      },
+    ],
+    [getCommonEditTextFieldProps]
+  );
+
   return (
     <>
-     <Box className="bar">
-      <BorderLinearProgress variant="determinate" value={50} />
-      <p className="percentage">50%</p>
-    </Box>
+      <Box className="bar">
+        <BorderLinearProgress variant="determinate" value={50} />
+        <p className="percentage">50%</p>
+      </Box>
       <MaterialReactTable
         displayColumnDefOptions={{
           "mrt-row-actions": {
@@ -245,9 +327,18 @@ const Goal = () => {
             </Tooltip>
           </Box>
         )}
+        renderTopToolbarCustomActions={() => (
+          <Button
+            color="secondary"
+            onClick={() => setCreateModalOpen(true)}
+            variant="contained"
+          >
+            Create New Profit
+          </Button>
+        )}
       />
       <CreateNewAccountModal
-        columns={columns}
+        columns={pop}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
@@ -265,15 +356,40 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     }, {})
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
+    try {
+      console.log("token ", localStorage.getItem("token"));
+      const data = {
+        "profit": values.profit,
+        "year": values.year,
+      };
+
+      console.log(JSON.stringify(data));
+
+      const res = await Axios.post(
+        "http://localhost:8000/api/goal",
+        JSON.stringify(data),
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      window.location.reload();
+      onSubmit(values);
+      onClose();
+    } catch (err) {
+      console.log("error ", err);
+    }
   };
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Create New Account</DialogTitle>
+      <DialogTitle textAlign="center">Create New Profit</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
@@ -299,7 +415,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       <DialogActions sx={{ p: "1.25rem" }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button color="secondary" onClick={handleSubmit} variant="contained">
-          Create New Account
+          Create New Profit
         </Button>
       </DialogActions>
     </Dialog>
