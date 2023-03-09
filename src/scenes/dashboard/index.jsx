@@ -12,10 +12,82 @@ import GeographyChart from "../../components/GeographyChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
+import React, { useCallback,  useEffect } from 'react';
+
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  const fetchIncome = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/income');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      console.log(data)
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchIncome();
+  }, [fetchIncome]);
+
+  const fetchExpenses = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/expense');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      console.log(data)
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
+
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/category');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      console.log(data)
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const fetchGoal = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/goal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      console.log(data)
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    fetchGoal();
+  }, [fetchGoal]);
 
   return (
     <Box m="20px">
