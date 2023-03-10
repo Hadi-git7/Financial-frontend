@@ -258,7 +258,6 @@ const Admins = () => {
 
   return (
     <>
-    <Topbar />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {
@@ -418,4 +417,3 @@ const validateEmail = (email) =>
 const validateAge = (age) => age >= 18 && age <= 50;
 
 export default Admins;  
-

@@ -42,9 +42,22 @@ const Expense = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreateNewRow = useCallback((values) => {
-    setTableData([...tableData, values]);
-  }, [tableData]);
+  // const handleCreateNewRow = useCallback((values) => {
+  //   setTableData([...tableData, values]);
+  // }, [tableData]);
+
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/expense');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
 
   const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
@@ -321,7 +334,7 @@ const Expense = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'number',
+          type: 'string',
 
         }),
       },   {
@@ -330,7 +343,7 @@ const Expense = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'number',
+          type: 'string',
 
         }),
       },
@@ -402,32 +415,9 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
 
   const handleSubmit = async () => {
     try {
-      // Check if the category already exists
-      let category = await Axios.get(`http://localhost:8000/api/category?title=${values.category_title}`, {
-        headers: {
-          'Accept': 'application/json',
-          "Authorization": "Bearer " + localStorage.getItem("token"),
-          "Content-Type": "application/json",
-        }
-      });
+ 
   
-      if (category.data.length === 0) {
-        // If the category does not exist, create a new category and add it to the database
-        const res = await Axios.post("http://localhost:8000/api/category", {
-          "title": values.category_title,
-
-        }, {
-          headers: {
-            'Accept': 'application/json',
-            "Authorization": "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "application/json",
-          }
-        });
-        category = res.data;
-      } else {
-        category = category.data[0];
-      }
-  
+   
       // Create a new payment and associate it with the current admin and category
       const data = {
         "type": values.type,
@@ -435,13 +425,11 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
         "description": values.description,
         "amount": values.amount,
         "currency": values.currency,
-        "category_id": category.id,
-        "category_title": category.title,
+        "category_title": values.category_title,
         "start_date": values.start_date,
         "end_date": values.end_date,
 
       };
-      
       const res2 = await Axios.post("http://localhost:8000/api/expense", data, {
         headers: {
           'Accept': 'application/json',
@@ -450,7 +438,6 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
         }
       });
   
-      window.location.reload();
       onSubmit(values);
       onClose();
     } catch (err) {

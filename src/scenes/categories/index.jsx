@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  MenuItem,
   Stack,
   TextField,
   Tooltip,
@@ -320,7 +319,6 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit}) => {
         //   'Content-Type': 'application/x-www-form-urlencoded'
         // },
 		  });
-		  // Request();
       onSubmit(values);
       onClose();
 	  }
