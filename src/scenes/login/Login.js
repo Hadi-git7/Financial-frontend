@@ -27,11 +27,17 @@ async function loginUser(credentials) {
     }
     return response.json();
   })
+  .then(data => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('is_super', data.is_super);
+    return data;
+  })
   .catch(error => {
     console.error('Error:', error);
     throw error;
   });
 }
+
 
 export default function Login() {
   const [username, setUserName] = useState('');
@@ -42,18 +48,20 @@ export default function Login() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const token = await loginUser({
+      const response = await loginUser({
         username,
         password
       });
-      setToken(token);
-      localStorage.setItem('token', token.token);
+      setToken(response.token);
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('is_super', response.is_super); // Save the is_super value in local storage
       window.location.reload();
     } catch (error) {
       console.error('Error:', error);
-      alert('Error:', error);
+      alert('Error: Invalid Username or Password', );
     }
   }
+  
 
   return(
     <div> 

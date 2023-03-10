@@ -14,7 +14,6 @@ import {
   Tooltip,
 } from '@mui/material';import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
-import Topbar from '../global/Topbar';
 
 
 const Categories = () => {
@@ -237,7 +236,7 @@ const Pop = useMemo(
 
 return (
   <>
-  <Topbar/>
+
     <MaterialReactTable
       displayColumnDefOptions={{
         'mrt-row-actions': {

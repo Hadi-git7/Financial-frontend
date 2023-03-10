@@ -34,8 +34,9 @@ const Topbar = () => {
     setToken(null);
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
+    localStorage.removeItem('is_super');
     handleMenuClose();
-    window.location.reload(); // reload the page
+    window.location.reload();
 };
 
 
