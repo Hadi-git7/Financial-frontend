@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import MaterialReactTable from 'material-react-table';
 import {
   Box,
@@ -8,127 +8,149 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  // MenuItem,
+  MenuItem,
   Stack,
   TextField,
   Tooltip,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-// import { data, states } from './makeData.ts';
+import Axios from 'axios';
+import Topbar from '../global/Topbar';
 
 const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  // const [tableData, setTableData] = useState(() => data);
   const [tableData, setTableData] = useState([]);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState({}); 
+
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // const handleCreateNewRow = useCallback((values) => {
+  //   setTableData([...tableData, values]);
+  // }, [tableData]);
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin', {
+        method: 'POST',
+        headers: { 
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create new row');
+      }
+      fetchData(); // fetch the updated data
+      setCreateModalOpen(false); // close the create modal
+    } catch (error) {
+      console.error(error);
+    }
+  }, [fetchData]);
   
 
 
 
-  useEffect(() => {
-    fetch('/api/admins')
-      .then((response) => response.json())
-      .then((data) => setTableData(data))
-      .catch((error) => console.error(error));
+
+
+
+  const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
+    if (!Object.keys(validationErrors).length) {
+      try {
+        // create a new object with only the desired fields
+        const editedValues = {
+          username: values.username,
+          password: values.password,
+          password_confirmation: values.password_confirmation
+        };
+  
+        const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Accept': 'application/json', 
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(editedValues),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update row');
+        }
+        const data = await response.json();
+        // update local table data
+        const newData = [...tableData];
+        newData[row.index] = data;
+        setTableData(newData);
+        exitEditingMode(); //required to exit editing mode and close modal
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [tableData, validationErrors]);
+  
+
+  const handleCancelRowEdits = useCallback(() => {
+    setValidationErrors({});
   }, []);
 
-  const handleCreateNewRow = (values) => {
-    //send API create request here, then update local table data for re-render
-    fetch('/api/admins', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    })
-      .then((response) => response.json())
-      .then((newRow) => setTableData([...tableData, newRow]))
-      .catch((error) => console.error(error));
-  };
-
-  const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-    if (!Object.keys(validationErrors).length) {
-      //send API update request here, then update local table data for re-render
-      fetch(`/api/admins/${row.original.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-        .then((response) => response.json())
-        .then(() => {
-          tableData[row.index] = values;
-          setTableData([...tableData]);
-          exitEditingMode(); //required to exit editing mode and close modal
-        })
-        .catch((error) => console.error(error));
+  const handleDeleteRow = useCallback(async (row) => {
+    if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
+      return;
     }
-  };
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          'Content-Type': 'application/json'
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete row');
+      }
+      // update local table data
+      const newData = [...tableData];
+      newData.splice(row.index, 1);
+      setTableData(newData);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [tableData]);
 
-  const handleDeleteRow = useCallback(
-    (row) => {
-      //send API delete request here, then update local table data for re-render
-      fetch(`/api/admins/${row.original.id}`, { method: 'DELETE' })
-        .then(() => {
-          tableData.splice(row.index, 1);
-          setTableData([...tableData]);
-        })
-        .catch((error) => console.error(error));
-    },
-    [tableData],
-  );
-
-  //rest of the code remains the same
-
-
-  // const handleCreateNewRow = (values) => {
-  //   tableData.push(values);
-  //   setTableData([...tableData]);
-  // };
-
-  // const handleSaveRowEdits = async ({ exitEditingMode, row, values }) => {
-  //   if (!Object.keys(validationErrors).length) {
-  //     tableData[row.index] = values;
-  //     //send/receive api updates here, then refetch or update local table data for re-render
-  //     setTableData([...tableData]);
-  //     exitEditingMode(); //required to exit editing mode and close modal
-  //   }
-  // };
-
-  const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
-
-  // const handleDeleteRow = useCallback(
-  //   (row) => {
-  //     // if (
-  //     //   !confirm(`Are you sure you want to delete ${row.getValue('firstName')}`)
-  //     // ) {
-  //     //   return;
-  //     // }
-  //     //send api delete request here, then refetch or update local table data for re-render
-  //     tableData.splice(row.index, 1);
-  //     setTableData([...tableData]);
-  //   },
-  //   [tableData],
-  // );
-
-  const getCommonEditTextFieldProps = useCallback(
-    (cell) => {
-      return {
-        error: !!validationErrors[cell.id],
-        helperText: validationErrors[cell.id],
-        onBlur: (event) => {
-          const isValid =
-            cell.column.id === 'email'
-              ? validateEmail(event.target.value)
-              : cell.column.id === 'age'
-              ? validateAge(+event.target.value)
-              : validateRequired(event.target.value);
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
+  const getCommonEditTextFieldProps = useCallback((cell) => {
+    return {
+      error: !!validationErrors[cell.id],
+      helperText: validationErrors[cell.id],
+      onBlur: (event) => {
+        const isValid =
+          cell.column.id === 'email'
+            ? validateEmail(event.target.value)
+            : cell.column.id === 'age'
+            ? validateAge(+event.target.value)
+            : validateRequired(event.target.value);
+        if (!isValid) {
+          //set validation error for cell if invalid
+          setValidationErrors({
+            ...validationErrors,
+            [cell.id]: `${cell.column.columnDef.header} is required`,
+          });
+        } else {
             //remove validation error for cell if valid
             delete validationErrors[cell.id];
             setValidationErrors({
@@ -144,7 +166,7 @@ const Admins = () => {
   const columns = useMemo(
     () => [
       {
-        accessorKey: 'user_id',
+        accessorKey: 'id',
         header: 'ID',
         enableColumnOrdering: false,
         enableEditing: false, //disable editing on this column
@@ -152,7 +174,7 @@ const Admins = () => {
         size: 80,
       },
       {
-        accessorKey: 'user_username',
+        accessorKey: 'username',
         header: 'Username',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
@@ -160,17 +182,18 @@ const Admins = () => {
         }),
       },
       {
-        accessorKey: 'user_is_super',
+        accessorKey: 'is_super',
         header: 'Role',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'string',
         }),
       },
-            {
+      {
         accessorKey: 'created_by',
         header: 'Created By',
-        size: 80,
+        size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
@@ -179,52 +202,21 @@ const Admins = () => {
       {
         accessorKey: 'updated_by',
         header: 'Updated By',
-        size: 80,
+        size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
         }),
       },
-      {
-        accessorKey: 'deleted_by',
-        header: 'Deleted By',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
-      {
-        accessorKey: 'deleted_at',
-        header: 'Deleted At',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'string',
-        }),
-      },
-      // {
-      //   accessorKey: 'lastName',
-      //   header: 'Last Name',
-      //   size: 140,
-      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-      //     ...getCommonEditTextFieldProps(cell),
-      //   }),
-      // },
-      // {
-      //   accessorKey: 'email',
-      //   header: 'Email',
-      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-      //     ...getCommonEditTextFieldProps(cell),
-      //     type: 'email',
-      //   }),
-      // },
+      
+ 
   
      
     ],
     [getCommonEditTextFieldProps],
   );
-  const Pop = useMemo(
+
+  const pop = useMemo(
     () => [
     
       {
@@ -241,26 +233,21 @@ const Admins = () => {
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'password',
         }),
       },
       {
-        accessorKey: 'confirmation_password',
-        header: 'Confirm_Password',
+        accessorKey: 'password_confirmation',
+        header: 'Password Confirmation',
         size: 140,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
+          type: 'password',
         }),
       },
+      
+ 
   
-      {
-        accessorKey: 'isSuper',
-        header: 'Role',
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: 'number',
-        }),
-      },
      
     ],
     [getCommonEditTextFieldProps],
@@ -268,6 +255,7 @@ const Admins = () => {
 
   return (
     <>
+    <Topbar />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {
@@ -286,7 +274,8 @@ const Admins = () => {
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement="left" title="Edit">
+            <Tooltip arrow placement="left" title="Edit" 
+            >
               <IconButton onClick={() => table.setEditingRow(row)}>
                 <Edit />
               </IconButton>
@@ -309,7 +298,8 @@ const Admins = () => {
         )}
       />
       <CreateNewAccountModal
-        columns={Pop}
+        columns={pop}
+        // data={tableData}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
@@ -319,7 +309,7 @@ const Admins = () => {
 };
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, setTableData }) => {
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
       acc[column.accessorKey ?? ''] = '';
@@ -327,10 +317,56 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     }, {}),
   );
 
-  const handleSubmit = () => {
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    
+
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+
+
+  const handleSubmit = async() => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
+    try {
+      console.log("token ",localStorage.getItem('token'));
+      const data = {
+        "username": values.username,
+        "password": values.password,
+        "password_confirmation": values.password_confirmation
+      };
+
+      console.log(JSON.stringify(data));
+	  
+		  const res = await Axios.post("http://localhost:8000/api/admin", JSON.stringify(data), {
+        headers: {
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        }
+		  });
+		  // Request();
+      fetchData();
+      onSubmit(values);
+      onClose();
+    
+	  }
+    catch (err) {
+    console.log("error ",err);
+  }
   };
 
   return (
@@ -361,7 +397,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button color="secondary" onClick={handleSubmit} variant="contained">
-          Create New Admin
+          Create
         </Button>
       </DialogActions>
     </Dialog>

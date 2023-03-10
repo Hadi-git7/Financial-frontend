@@ -12,11 +12,27 @@ import Calendar from "./scenes/calendar";
 import Bar from "./scenes/bar";
 import Pie from "./scenes/pie";
 import Line from "./scenes/line";
+import Login from './scenes/login/Login';
+import useToken from './scenes/login/useToken';
+import Income from "./scenes/incomes";
+import Expense from "./scenes/expenses";
+
+
+
+
 
 
 function App() {
-	const [theme, colorMode] = useMode();
+    const [theme, colorMode] = useMode();
 
+
+	const { token, setToken } = useToken();
+
+	const role = localStorage.getItem('role');
+
+	if (!token) {
+	  return <Login setToken={setToken} />
+	}
 	return (
 		<ColorModeContext.Provider value={colorMode}>
 			<ThemeProvider theme={theme}>
@@ -28,7 +44,10 @@ function App() {
 						<Routes>
 							<Route exact path="/" element={<Dashboard />} />
 							<Route path="/admins" element={<Admins />} />
-							<Route path="/payments" element={<Payment />} />
+              
+
+							<Route path="/income" element={<Income />} />
+							<Route path="/expense" element={<Expense />} />
 							<Route path="/categories" element={<Categories />} />
 							<Route path="/goal" element={<Goal />} />
 							<Route path="/calendar" element={<Calendar />} />
