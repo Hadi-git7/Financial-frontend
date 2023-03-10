@@ -3,7 +3,7 @@ import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import TrafficIcon from "@mui/icons-material/Traffic";
+import FlagIcon from '@mui/icons-material/Flag';
 import Header from "../../components/Header";
 import LineChart from "../../components/LineChart";
 import GeographyChart from "../../components/GeographyChart";
@@ -23,6 +23,10 @@ const Dashboard = () => {
   const [totalIncome,setTotaIncome] = useState('');
   const [totalExpense,setTotalExpense] = useState('');
   const [numCategories, setNumCategories] = useState('');
+  const [expenses, setExpenses] = useState([]);
+  const [username, setUsername] = useState(''); // initial value can be empty string or any default value
+  const [startDate, setStartDate] = useState(''); // initial value can be empty string or any default value
+
 
 
   const fetchIncome = useCallback(async () => {
@@ -53,6 +57,7 @@ const Dashboard = () => {
       const data = await response.json();
       const totalAmount = data.reduce((acc, { amount }) => acc + parseFloat(amount), 0);
       setTotalExpense(totalAmount); // assuming you have a state variable called "totalExpense"
+      setExpenses(data); // save all expenses data to state
       console.log(data)
     } catch (error) {
       console.error(error);
@@ -61,6 +66,13 @@ const Dashboard = () => {
   useEffect(() => {
     fetchExpenses();
   }, [fetchExpenses]);
+
+    // filter expenses based on username and start date
+    const filteredExpenses = expenses.filter(expense => {
+      const start_date = new Date(expense.start_date);
+      return expense.username === username && start_date >= new Date(startDate);
+    });
+  
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -197,7 +209,7 @@ const Dashboard = () => {
             progress="0.80"
             increase="+43%"
             icon={
-              <TrafficIcon
+              <FlagIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
@@ -266,10 +278,10 @@ const Dashboard = () => {
               Recent Transactions
             </Typography>
           </Box>
-          {mockTransactions.map((transaction, i) => (
+          {filteredExpenses.map((expense, i) => (
             <Box
-              key={`${transaction.txId}-${i}`}
-              display="flex"
+            key={`${expense.txId}-${i}`}
+            display="flex"
               justifyContent="space-between"
               alignItems="center"
               borderBottom={`4px solid ${colors.primary[500]}`}
@@ -281,19 +293,19 @@ const Dashboard = () => {
                   variant="h5"
                   fontWeight="600"
                 >
-                  {transaction.txId}
+              {expense.txId}
                 </Typography>
                 <Typography color={colors.grey[100]}>
-                  {transaction.user}
+                {expense.username}
                 </Typography>
               </Box>
-              <Box color={colors.grey[100]}>{transaction.date}</Box>
+              <Box color={colors.grey[100]}>{expense.date}</Box>
               <Box
                 backgroundColor={colors.greenAccent[500]}
                 p="5px 10px"
                 borderRadius="4px"
               >
-                ${transaction.cost}
+            ${expense.amount}
               </Box>
             </Box>
           ))}

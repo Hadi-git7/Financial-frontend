@@ -401,31 +401,6 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
   );
   const handleSubmit = async () => {
     try {
-      // Check if the category already exists
-      let category = await Axios.get(`http://localhost:8000/api/category?title=${values.category_title}`, {
-        headers: {
-          'Accept': 'application/json',
-          "Authorization": "Bearer " + localStorage.getItem("token"),
-          "Content-Type": "application/json",
-        }
-      });
-  
-      if (category.data.length === 0) {
-        // If the category does not exist, create a new category and add it to the database
-        const res = await Axios.post("http://localhost:8000/api/category", {
-          "title": values.category_title,
-
-        }, {
-          headers: {
-            'Accept': 'application/json',
-            "Authorization": "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "application/json",
-          }
-        });
-        category = res.data;
-      } else {
-        category = category.data[0];
-      }
   
       // Create a new payment and associate it with the current admin and category
       const data = {
@@ -434,8 +409,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
         "description": values.description,
         "amount": values.amount,
         "currency": values.currency,
-        "category_id": category.id,
-        "category_title": category.title,
+        "category_title": values.category_title,
         "start_date": values.start_date,
         "end_date": values.end_date,
 

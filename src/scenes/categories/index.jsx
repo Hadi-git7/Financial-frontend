@@ -219,7 +219,7 @@ return (
       onEditingRowCancel={handleCancelRowEdits}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
-          <Tooltip arrow placement="left" title="Editz">
+          <Tooltip arrow placement="left" title="Edit">
             <IconButton onClick={() => table.setEditingRow(row)}>
               <Edit />
             </IconButton>
@@ -280,6 +280,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit}) => {
               }
        
 		  });
+      window.location.reload();
       onSubmit(values);
       onClose();
 	  }
