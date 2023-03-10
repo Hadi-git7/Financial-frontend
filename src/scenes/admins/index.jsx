@@ -15,11 +15,15 @@ import {
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
+import Topbar from '../global/Topbar';
 
 const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+
+
+  
 
   const fetchData = useCallback(async () => {
     try {
@@ -38,26 +42,54 @@ const Admins = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreateNewRow = useCallback((values) => {
-    setTableData([...tableData, values]);
-  }, [tableData]);
+  // const handleCreateNewRow = useCallback((values) => {
+  //   setTableData([...tableData, values]);
+  // }, [tableData]);
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin', {
+        method: 'POST',
+        headers: { 
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create new row');
+      }
+      fetchData(); // fetch the updated data
+      setCreateModalOpen(false); // close the create modal
+    } catch (error) {
+      console.error(error);
+    }
+  }, [fetchData]);
+  
+
+
+
+
+
 
   const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
       try {
-        const body = {
+        // create a new object with only the desired fields
+        const editedValues = {
           username: values.username,
           password: values.password,
           password_confirmation: values.password_confirmation
         };
+  
         const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
           method: 'PUT',
-          headers: {
+          headers: { 
             'Accept': 'application/json', 
             "Authorization": "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify(editedValues),
         });
         if (!response.ok) {
           throw new Error('Failed to update row');
@@ -73,6 +105,7 @@ const Admins = () => {
       }
     }
   }, [tableData, validationErrors]);
+  
 
   const handleCancelRowEdits = useCallback(() => {
     setValidationErrors({});
@@ -85,14 +118,12 @@ const Admins = () => {
     try {
       const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
         method: 'DELETE',
-        headers: {
+        headers: { 
           'Accept': 'application/json', 
           "Authorization": "Bearer " + localStorage.getItem("token"),
-          "Content-Type": "application/json",
-        }
-      
+          'Content-Type': 'application/json'
+        },
       });
-      
       if (!response.ok) {
         throw new Error('Failed to delete row');
       }
@@ -169,7 +200,6 @@ const Admins = () => {
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: 'string',
-          
         }),
       },
       {
@@ -189,7 +219,7 @@ const Admins = () => {
     [getCommonEditTextFieldProps],
   );
 
-  const Pop = useMemo(
+  const pop = useMemo(
     () => [
     
       {
@@ -218,6 +248,9 @@ const Admins = () => {
           type: 'password',
         }),
       },
+      
+ 
+  
      
     ],
     [getCommonEditTextFieldProps],
@@ -225,6 +258,7 @@ const Admins = () => {
 
   return (
     <>
+    <Topbar />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {
@@ -243,7 +277,8 @@ const Admins = () => {
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement="left" title="Edit">
+            <Tooltip arrow placement="left" title="Edit" 
+            >
               <IconButton onClick={() => table.setEditingRow(row)}>
                 <Edit />
               </IconButton>
@@ -266,7 +301,8 @@ const Admins = () => {
         )}
       />
       <CreateNewAccountModal
-        columns={Pop}
+        columns={pop}
+        // data={tableData}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
@@ -276,13 +312,35 @@ const Admins = () => {
 };
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, setTableData }) => {
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
       acc[column.accessorKey ?? ''] = '';
       return acc;
     }, {}),
   );
+
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    
+
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+
 
   const handleSubmit = async() => {
     //put your validation logic here
@@ -303,9 +361,11 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
           "Content-Type": "application/json",
         }
 		  });
-      window.location.reload();
+		  // Request();
+      fetchData();
       onSubmit(values);
       onClose();
+    
 	  }
     catch (err) {
     console.log("error ",err);
@@ -340,7 +400,7 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button onClick={onClose}>Cancel</Button>
         <Button color="secondary" onClick={handleSubmit} variant="contained">
-          Create New Admin
+          Create
         </Button>
       </DialogActions>
     </Dialog>

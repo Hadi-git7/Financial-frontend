@@ -50,12 +50,26 @@ const Goal = () => {
     };
   }, []);
 
-  const handleCreateNewRow = useCallback(
-    (values) => {
-      setTableData([...tableData, values]);
-    },
-    [tableData]
-  );
+  // const handleCreateNewRow = useCallback(
+  //   (values) => {
+  //     setTableData([...tableData, values]);
+  //   },
+  //   [tableData]
+  // );
+
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/goal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
 
   const fetchData = async () => {
     try {
@@ -379,7 +393,6 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
           },
         }
       );
-      window.location.reload();
       onSubmit(values);
       onClose();
     } catch (err) {
