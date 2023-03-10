@@ -12,11 +12,23 @@ import Calendar from "./scenes/calendar";
 import Bar from "./scenes/bar";
 import Pie from "./scenes/pie";
 import Line from "./scenes/line";
+import Login from './scenes/login/Login';
+import useToken from './scenes/login/useToken';
+
+
+
+
 
 
 function App() {
-	const [theme, colorMode] = useMode();
+    const [theme, colorMode] = useMode();
 
+
+	const { token, setToken } = useToken();
+
+	if (!token) {
+	  return <Login setToken={setToken} />
+	}
 	return (
 		<ColorModeContext.Provider value={colorMode}>
 			<ThemeProvider theme={theme}>

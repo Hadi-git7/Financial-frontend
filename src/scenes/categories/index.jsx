@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from '@mui/material';import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
+import Topbar from '../global/Topbar';
 
 
 const Categories = () => {
@@ -38,9 +39,23 @@ useEffect(() => {
   fetchData();
 }, [fetchData]);
 
-const handleCreateNewRow = useCallback((values) => {
-  setTableData([...tableData, values]);
-}, [tableData]);
+// const handleCreateNewRow = useCallback((values) => {
+//   setTableData([...tableData, values]);
+// }, [tableData]);
+
+const handleCreateNewRow = useCallback(async (values) => {
+  try {
+    const response = await fetch('http://localhost:8000/api/category');
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+    const data = await response.json();
+    setTableData(data);
+  } catch (error) {
+    console.error(error);
+  }
+}, []);
+
 
 const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
   if (!Object.keys(validationErrors).length) {
@@ -89,19 +104,22 @@ const handleDeleteRow = useCallback(async (row) => {
         'Accept': 'application/json', 
         "Authorization": "Bearer " + localStorage.getItem("token"),
         'Content-Type': 'application/x-www-form-urlencoded'
-            },
+      },
     });
     if (!response.ok) {
       throw new Error('Failed to delete row');
     }
-    // update local table data
-    const newData = [...tableData];
-    newData.splice(row.index, 1);
+    const newResponse = await fetch('http://localhost:8000/api/category');
+    if (!newResponse.ok) {
+      throw new Error('Failed to fetch data');
+    }
+    const newData = await newResponse.json();
     setTableData(newData);
   } catch (error) {
     console.error(error);
   }
-}, [tableData]);
+}, []);
+
 
 const getCommonEditTextFieldProps = useCallback((cell) => {
   return {
@@ -195,15 +213,7 @@ const columns = useMemo(
         type: 'string',
       }),
     },
-    {
-      accessorKey: 'actions',
-      header: 'Actions',
-      size: 80,
-      muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-        ...getCommonEditTextFieldProps(cell),
-        type: 'string',
-      }),
-    },
+  
 
     
   ],
@@ -227,6 +237,7 @@ const Pop = useMemo(
 
 return (
   <>
+  <Topbar/>
     <MaterialReactTable
       displayColumnDefOptions={{
         'mrt-row-actions': {

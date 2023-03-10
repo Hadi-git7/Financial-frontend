@@ -42,9 +42,35 @@ const Admins = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreateNewRow = useCallback((values) => {
-    setTableData([...tableData, values]);
-  }, [tableData]);
+  // const handleCreateNewRow = useCallback((values) => {
+  //   setTableData([...tableData, values]);
+  // }, [tableData]);
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin', {
+        method: 'POST',
+        headers: { 
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create new row');
+      }
+      fetchData(); // fetch the updated data
+      setCreateModalOpen(false); // close the create modal
+    } catch (error) {
+      console.error(error);
+    }
+  }, [fetchData]);
+  
+
+
+
+
+
 
   const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) => {
     if (!Object.keys(validationErrors).length) {
@@ -286,13 +312,35 @@ const Admins = () => {
 };
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
+export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, setTableData }) => {
   const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
       acc[column.accessorKey ?? ''] = '';
       return acc;
     }, {}),
   );
+
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/admin');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    
+
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+
 
   const handleSubmit = async() => {
     //put your validation logic here
@@ -314,8 +362,10 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
         }
 		  });
 		  // Request();
+      fetchData();
       onSubmit(values);
       onClose();
+    
 	  }
     catch (err) {
     console.log("error ",err);
@@ -368,3 +418,4 @@ const validateEmail = (email) =>
 const validateAge = (age) => age >= 18 && age <= 50;
 
 export default Admins;  
+
