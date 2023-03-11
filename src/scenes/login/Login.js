@@ -4,7 +4,6 @@ import {
   Container,
   Button,
   Grid,
-  Paper,
   TextField,
   IconButton,
   InputAdornment,
@@ -12,6 +11,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import useToken from './useToken';
+import './Login.css'
 
 async function loginUser(credentials) {
   return fetch('http://localhost:8000/api/login', {
@@ -64,64 +64,67 @@ export default function Login() {
   
 
   return(
-    <div> 
-      <Container maxWidth="sm">
+  
+    <div className="container">
+      <Container className="screen">
         <Grid
           container
           spacing={2}
           direction="column"
           justifyContent="center"
           style={{ minHeight: "100vh" }}    
-        >
-        <Paper elelvation={2} sx={{ padding: 5 }}>
-        <form onSubmit={handleSubmit}>
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
-            <TextField
-              type="string"
-              fullWidth
-              label="Enter your username"
-              placeholder="username"
-              variant="outlined"
-              required
-              autoFocus
-              onChange={(e) => setUserName(e.target?.value)}
-            />
-          </Grid>
-
-          <Grid item>
-            <TextField
-              type={showPassword ? "text" : "password"}
-              fullWidth
-              label="Password"
-              placeholder="Password"
-              variant="outlined"
-              required
-              onChange={(e) => setPassword(e.target?.value)}    
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}
-                      aria-label="toggle password" edge="end">
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+          className="screen__content">
+          <form className="login" onSubmit={handleSubmit}>
+            <Grid item className="login__field">
+              <TextField
+                className="login__input"
+                type="string"
+                fullWidth
+                label="Enter your username"
+                placeholder="username"
+                variant="outlined"
+                required
+                autoFocus
+                onChange={(e) => setUserName(e.target?.value)}
+                />
+            </Grid>
+            <Grid item className="login__field">
+              <TextField
+                className="login__input"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                label="Password"
+                placeholder="Password"
+                variant="outlined"
+                required
+                onChange={(e) => setPassword(e.target?.value)}    
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)}
+                        aria-label="toggle password" edge="end">
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
               }}
-            />
-          </Grid>
-
-          <Grid item>
-            <Button type="submit" fullWidth variant="contained">
-              Sign In
+              />
+            </Grid>
+            <Button type="submit" fullWidth variant="contained" className="button login__submit">
+              <span className="button__text">Sign In</span>
             </Button>
-          </Grid>
+          </form>
+          <div className="social-login">
+          </div>
         </Grid>
-        </form>
-        </Paper>
-        </Grid>
+        <div className="screen__background">
+          <span className="screen__background__shape screen__background__shape4"></span>
+          <span className="screen__background__shape screen__background__shape3"></span>		
+          <span className="screen__background__shape screen__background__shape2"></span>
+          <span className="screen__background__shape screen__background__shape1"></span>
+        </div>		
       </Container>
-    </div>
+    </div> 
   );
 }
 
@@ -132,3 +135,4 @@ Login.propTypes = {
 Login.defaultProps = {
   setToken: () => {},
 };
+
