@@ -1,11 +1,34 @@
 import { useTheme } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
 import { tokens } from "../theme";
-import { mockBarData as data } from "../data/mockData";
+import React, { useCallback,useState,  useEffect } from 'react';
+
+
 
 const BarChart = ({ isDashboard = false }) => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
+    const [data, setData] = useState([]);
+
+    const fetchGoal = useCallback(async () => {
+        try {
+          const response = await fetch('http://localhost:8000/api/goal');
+          if (!response.ok) {
+            throw new Error('Failed to fetch data');
+          }
+          const data = await response.json();
+          setData(data.sort((a, b) => a.year - b.year)); // sort the fetched data by year and set it to the state variable
+        } catch (error) {
+          console.error(error);
+        }
+    }, []);
+    
+      
+
+
+  useEffect(() => {
+    fetchGoal();
+  }, [fetchGoal]);
 
     return (
         <ResponsiveBar
@@ -38,8 +61,9 @@ const BarChart = ({ isDashboard = false }) => {
                     },
                 },
             }}
-            keys={["hot dog", "burger", "sandwich", "kebab", "fries", "donut"]}
-            indexBy="country"
+            // keys={["Incomes", "Expenses", "Goal"]}
+            keys={["profit"]}
+            indexBy="year"
             margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
             padding={0.3}
             valueScale={{ type: "linear" }}
