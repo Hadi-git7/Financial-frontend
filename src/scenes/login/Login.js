@@ -4,7 +4,6 @@ import {
   Container,
   Button,
   Grid,
-  Paper,
   TextField,
   IconButton,
   InputAdornment,
@@ -12,6 +11,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import useToken from './useToken';
+import './Login.css'
 
 async function loginUser(credentials) {
   return fetch('http://localhost:8000/api/login', {
@@ -64,64 +64,67 @@ export default function Login() {
   
 
   return(
-    <div> 
-      <Container maxWidth="sm">
+  
+    <div class="container">
+      <Container class="screen">
         <Grid
           container
           spacing={2}
           direction="column"
           justifyContent="center"
           style={{ minHeight: "100vh" }}    
-        >
-        <Paper elelvation={2} sx={{ padding: 5 }}>
-        <form onSubmit={handleSubmit}>
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
-            <TextField
-              type="email"
-              fullWidth
-              label="Enter your username"
-              placeholder="username"
-              variant="outlined"
-              required
-              autoFocus
-              onChange={(e) => setUserName(e.target?.value)}
-            />
-          </Grid>
-
-          <Grid item>
-            <TextField
-              type={showPassword ? "text" : "password"}
-              fullWidth
-              label="Password"
-              placeholder="Password"
-              variant="outlined"
-              required
-              onChange={(e) => setPassword(e.target?.value)}    
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}
-                      aria-label="toggle password" edge="end">
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+          class="screen__content">
+          <form class="login" onSubmit={handleSubmit}>
+            <Grid item class="login__field">
+              <TextField
+                class="login__input"
+                type="email"
+                fullWidth
+                label="Enter your username"
+                placeholder="username"
+                variant="outlined"
+                required
+                autoFocus
+                onChange={(e) => setUserName(e.target?.value)}
+                />
+            </Grid>
+            <Grid item class="login__field">
+              <TextField
+                class="login__input"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                label="Password"
+                placeholder="Password"
+                variant="outlined"
+                required
+                onChange={(e) => setPassword(e.target?.value)}    
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)}
+                        aria-label="toggle password" edge="end">
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
               }}
-            />
-          </Grid>
-
-          <Grid item>
-            <Button type="submit" fullWidth variant="contained">
-              Sign In
+              />
+            </Grid>
+            <Button type="submit" fullWidth variant="contained" class="button login__submit">
+              <span class="button__text">Sign In</span>
             </Button>
-          </Grid>
+          </form>
+          <div class="social-login">
+          </div>
         </Grid>
-        </form>
-        </Paper>
-        </Grid>
+        <div class="screen__background">
+          <span class="screen__background__shape screen__background__shape4"></span>
+          <span class="screen__background__shape screen__background__shape3"></span>		
+          <span class="screen__background__shape screen__background__shape2"></span>
+          <span class="screen__background__shape screen__background__shape1"></span>
+        </div>		
       </Container>
-    </div>
+    </div> 
   );
 }
 
@@ -132,3 +135,4 @@ Login.propTypes = {
 Login.defaultProps = {
   setToken: () => {},
 };
+

@@ -1,15 +1,38 @@
 import { ResponsivePie } from "@nivo/pie";
 import { tokens } from "../theme";
 import { useTheme } from "@mui/material";
-import { mockPieData as data } from "../data/mockData";
+import React, { useCallback, useState, useEffect } from "react";
 
 const PieChart = () => {
-    const theme = useTheme();
-    const colors = tokens(theme.palette.mode);
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  const [categories, setCategories] = useState([]);
 
-    return (
-        <ResponsivePie
-            data={data}
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/category");
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      const data = await response.json();
+      const formattedData = data.map((category) => ({
+        id: category.id,
+        label: category.title,
+        value: 1,
+      }));
+      setCategories(formattedData); // Set the formatted category data in state
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  return (
+    <ResponsivePie
+      data={categories}
             theme={{
                 axis: {
                     domain: {

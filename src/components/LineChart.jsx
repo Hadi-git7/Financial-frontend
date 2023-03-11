@@ -1,117 +1,56 @@
-import { ResponsiveLine } from "@nivo/line";
-import { useTheme } from "@mui/material";
-import { tokens } from "../theme";
-import { mockLineData as data } from "../data/mockData";
 
-const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
-    const theme = useTheme();
-    const colors = tokens(theme.palette.mode);
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-    return (
-        <ResponsiveLine
-            data={data}
-            theme={{
-                axis: {
-                    domain: {
-                        line: {
-                            stroke: colors.grey[100],
-                        },
-                    },
-                    legend: {
-                        text: {
-                            fill: colors.grey[100],
-                        },
-                    },
-                    ticks: {
-                        line: {
-                            stroke: colors.grey[100],
-                            strokeWidth: 1,
-                        },
-                        text: {
-                            fill: colors.grey[100],
-                        },
-                    },
-                },
-                legends: {
-                    text: {
-                        fill: colors.grey[100],
-                    },
-                },
-                tooltip: {
-                    container: {
-                        color: colors.primary[500],
-                    },
-                },
-            }}
-            colors={isDashboard ? { datum: "color" } : { scheme: "nivo" }}
-            margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-            xScale={{ type: "point" }}
-            yScale={{
-                type: "linear",
-                min: "auto",
-                max: "auto",
-                stacked: true,
-                reverse: false,
-            }}
-            yFormat=" >-.2f"
-            curve="catmullRom"
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-                orient: "bottom",
-                tickSize: 0,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: isDashboard ? undefined : "transportation",
-                legendOffset: 36,
-                legendPosition: "middle",
-            }}
-            axisLeft={{
-                orient: "left",
-                tickValues: 5,
-                tickSize: 3,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: isDashboard ? undefined : "count",
-                legendOffset: -40,
-                legendPosition: "middle",
-            }}
-            enableGridX={false}
-            enableGridY={false}
-            pointSize={8}
-            pointColor={{ theme: "background" }}
-            pointBorderWidth={2}
-            pointBorderColor={{ from: "serieColor" }}
-            pointLabelYOffset={-12}
-            useMesh={true}
-            legends={[
-                {
-                    anchor: "bottom-right",
-                    direction: "column",
-                    justify: false,
-                    translateX: 100,
-                    translateY: 0,
-                    itemsSpacing: 0,
-                    itemDirection: "left-to-right",
-                    itemWidth: 80,
-                    itemHeight: 20,
-                    itemOpacity: 0.75,
-                    symbolSize: 12,
-                    symbolShape: "circle",
-                    symbolBorderColor: "rgba(0, 0, 0, .5)",
-                    effects: [
-                        {
-                        on: "hover",
-                        style: {
-                            itemBackground: "rgba(0, 0, 0, .03)",
-                            itemOpacity: 1,
-                        },
-                        },
-                    ],
-                },
-            ]}
-        />
-    );
-};
+const data = [
+  {
+    name: 'January',
+    Iphone: 4000
+  },
+  {
+    name: "March",
+    Iphone: 1000,
+  },
+  {
+    name: "May",
+    Iphone: 4000,
+  },
+  {
+    name: "July",
+    Iphone: 800,
+  },
+  {
+    name: "October",
+    Iphone: 1500,
+  },
+];
 
-export default LineChart;
+function LineChartComponent() {
+  return (
+    <>
+   
+      <ResponsiveContainer width="90%" aspect={3}>
+      <LineChart
+        width={500}
+        height={300}
+        data={data}
+        margin={{
+          top: 15,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid  horizontal="true" vertical="" stroke="#243240"/>
+        <XAxis dataKey="name" tick={{fill:"#fff"}}/>
+        <YAxis tick={{fill:"#fff"}} />
+        <Tooltip contentStyle={{ backgroundColor: "#8884d8", color: "#fff" }} itemStyle={{ color: "#fff" }} cursor={false}/>
+        <Line type="monotone" dataKey="Iphone" stroke="#8884d8" strokeWidth="5" dot={{fill:"#2e4355",stroke:"#8884d8",strokeWidth: 2,r:5}} activeDot={{fill:"#2e4355",stroke:"#8884d8",strokeWidth: 5,r:10}} />
+        
+      </LineChart>
+    </ResponsiveContainer>
+  </>
+  );
+}
+
+export default LineChartComponent;
+
