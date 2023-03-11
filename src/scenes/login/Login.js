@@ -65,19 +65,19 @@ export default function Login() {
 
   return(
   
-    <div className="container">
-      <Container className="screen">
+    <div class="container">
+      <Container class="screen">
         <Grid
           container
           spacing={2}
           direction="column"
           justifyContent="center"
           style={{ minHeight: "100vh" }}    
-          className="screen__content">
-          <form className="login" onSubmit={handleSubmit}>
-            <Grid item className="login__field">
+          class="screen__content">
+          <form class="login" onSubmit={handleSubmit}>
+            <Grid item class="login__field">
               <TextField
-                className="login__input"
+                class="login__input"
                 type="email"
                 fullWidth
                 label="Enter your username"
@@ -88,9 +88,9 @@ export default function Login() {
                 onChange={(e) => setUserName(e.target?.value)}
                 />
             </Grid>
-            <Grid item className="login__field">
+            <Grid item class="login__field">
               <TextField
-                className="login__input"
+                class="login__input"
                 type={showPassword ? "text" : "password"}
                 fullWidth
                 label="Password"
@@ -110,18 +110,18 @@ export default function Login() {
               }}
               />
             </Grid>
-            <Button type="submit" fullWidth variant="contained" className="button login__submit">
-              <span className="button__text">Sign In</span>
+            <Button type="submit" fullWidth variant="contained" class="button login__submit">
+              <span class="button__text">Sign In</span>
             </Button>
           </form>
-          <div className="social-login">
+          <div class="social-login">
           </div>
         </Grid>
-        <div className="screen__background">
-          <span className="screen__background__shape screen__background__shape4"></span>
-          <span className="screen__background__shape screen__background__shape3"></span>		
-          <span className="screen__background__shape screen__background__shape2"></span>
-          <span className="screen__background__shape screen__background__shape1"></span>
+        <div class="screen__background">
+          <span class="screen__background__shape screen__background__shape4"></span>
+          <span class="screen__background__shape screen__background__shape3"></span>		
+          <span class="screen__background__shape screen__background__shape2"></span>
+          <span class="screen__background__shape screen__background__shape1"></span>
         </div>		
       </Container>
     </div> 
