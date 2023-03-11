@@ -269,6 +269,13 @@ const Dashboard = () => {
       >
         {income.id}
       </Typography>
+      <Typography
+        color={colors.greenAccent[500]}
+        variant="h5"
+        fontWeight="600"
+      >
+        {income.title}
+      </Typography>
       <Typography color={colors.grey[100]}>
         {income.created_by}
       </Typography>
@@ -355,9 +362,17 @@ const Dashboard = () => {
                 >
                   {expense.id}
                 </Typography>
+                <Typography
+                  color={colors.greenAccent[500]}
+                  variant="h5"
+                  fontWeight="600"
+                >
+                  {expense.title}
+                </Typography>
                 <Typography color={colors.grey[100]}>
                   {expense.created_by}
                 </Typography>
+               
               </Box>
               <Box color={colors.grey[100]}>{expense.date}</Box>
               <Box
