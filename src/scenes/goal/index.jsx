@@ -44,6 +44,8 @@ const Goal = () => {
     let isMounted = true; // set a flag to check if the component is mounted
 
     fetchData();
+    incomedata();
+    expdata();
 
     return () => {
       isMounted = false; // set the flag to false when the component unmounts
@@ -56,6 +58,7 @@ const Goal = () => {
     },
     [tableData]
   );
+  let profitdate = null;
 
   const fetchData = async () => {
     try {
@@ -64,8 +67,43 @@ const Goal = () => {
         throw new Error("Network response was not ok");
       }
       const jsonData = await response.json();
-      // setData(jsonData);
+      profitdate = jsonData.map((item) => item.year);
+      console.log(profitdate);
       setTableData(jsonData);
+    } catch (error) {
+      console.error(error);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second and retry the function
+      await fetchData();
+    }
+  };
+
+  fetchData().then(() => {
+    console.log(profitdate);
+  });
+  
+
+  const incomedata = async () => {
+    try {
+      const income = await fetch("http://localhost:8000/api/income");
+      if (!income.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const jsonincome = await income.json();
+      const filteredincome = jsonincome.map((item) => item.amount);
+      console.log(filteredincome);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const expdata = async () => {
+    try {
+      const expense = await fetch("http://localhost:8000/api/expense");
+      if (!expense.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const jsonexpense = await expense.json();
+      const filteredexpanse = jsonexpense.map((item) => item.amount);
     } catch (error) {
       console.error(error);
     }
@@ -361,8 +399,8 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
     try {
       console.log("token ", localStorage.getItem("token"));
       const data = {
-        "profit": values.profit,
-        "year": values.year,
+        profit: values.profit,
+        year: values.year,
       };
 
       console.log(JSON.stringify(data));
