@@ -39,6 +39,12 @@ const Goal = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [profitDate, setProfitDate] = useState([]);
+  const [filterIncome, setFilterIncome] = useState([]);
+  const [filterExpense, setFilterExpense] = useState([]);
+  const [yearExpense, setYearExpense] = useState([]);
+  const [yearIncome, setYearIncome] = useState([]);
+  const [profitValue, setProfitValue] = useState([]);
 
   useEffect(() => {
     let isMounted = true; // set a flag to check if the component is mounted
@@ -58,7 +64,6 @@ const Goal = () => {
     },
     [tableData]
   );
-  let profitdate = null;
 
   const fetchData = async () => {
     try {
@@ -67,9 +72,14 @@ const Goal = () => {
         throw new Error("Network response was not ok");
       }
       const jsonData = await response.json();
-      profitdate = jsonData.map((item) => item.year);
-      console.log(profitdate);
+      var profitdate = jsonData.map((item) => item.year);
+      var profitvaluestring = jsonData.map((item) => item.profit);
+      const profitvalue = parseFloat(profitvaluestring);
+
+      console.log(profitvalue);
+      setProfitDate(profitdate);
       setTableData(jsonData);
+      setProfitValue(profitvalue);
     } catch (error) {
       console.error(error);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second and retry the function
@@ -77,10 +87,7 @@ const Goal = () => {
     }
   };
 
-  fetchData().then(() => {
-    console.log(profitdate);
-  });
-  
+  console.log("LALA ", profitDate);
 
   const incomedata = async () => {
     try {
@@ -88,27 +95,131 @@ const Goal = () => {
       if (!income.ok) {
         throw new Error("Network response was not ok");
       }
+      const yearinc = [];
       const jsonincome = await income.json();
+      const incdate = jsonincome.map((item) => item.end_date);
+      const n = incdate.length;
+      for (let i = 0; i < n; i++) {
+        yearinc[i] = incdate[i].split("-")[0];
+      }
       const filteredincome = jsonincome.map((item) => item.amount);
+      setFilterIncome(filteredincome);
+      setYearIncome(yearinc);
       console.log(filteredincome);
+      console.log(yearinc);
     } catch (error) {
       console.error(error);
     }
   };
+  const m = yearIncome.length;
+  const mm = filterIncome.length;
+  const indexinc = [];
+  const arrayIncomestring = [];
+  for (let i = 0; i < m; i++) {
+    if (yearIncome[i] == profitDate) {
+      indexinc[i] = i;
+    }
+  }
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < mm; j++) {
+      if (indexinc[i] == j) {
+        arrayIncomestring[j] = filterIncome[j];
+      }
+    }
+  }
+  const arrayIncome = [];
+  for (let i = 0; i < arrayIncomestring.length; i++) {
+    arrayIncome[i] = parseFloat(arrayIncomestring[i]);
+  }
+  let totalIncome = 0;
 
+  arrayIncome.forEach((item) => {
+    totalIncome += item;
+  });
+  console.log(arrayIncome);
+  console.log(totalIncome);
+
+  console.log(indexinc);
   const expdata = async () => {
     try {
       const expense = await fetch("http://localhost:8000/api/expense");
       if (!expense.ok) {
         throw new Error("Network response was not ok");
       }
+      const yearexp = [];
       const jsonexpense = await expense.json();
+      const expdate = jsonexpense.map((item) => item.end_date);
+      const n = expdate.length;
+      for (let i = 0; i < n; i++) {
+        yearexp[i] = expdate[i].split("-")[0];
+      }
       const filteredexpanse = jsonexpense.map((item) => item.amount);
+      setFilterExpense(filteredexpanse);
+      setYearExpense(yearexp);
+      console.log(yearexp);
     } catch (error) {
       console.error(error);
     }
   };
 
+  const p = yearExpense.length;
+  const pp = filterExpense.length;
+  const indexexp = [];
+  const arrayExpense = [];
+  for (let i = 0; i < p; i++) {
+    if (yearExpense[i] == profitDate) {
+      indexexp[i] = i;
+    }
+  }
+  console.log(indexexp);
+  for (let i = 0; i < p; i++) {
+    for (let j = 0; j < pp; j++) {
+      if (indexexp[i] == j) {
+        arrayExpense[j] = filterExpense[j];
+      }
+    }
+  }
+  let totalExpense = 0;
+
+  arrayExpense.forEach((item) => {
+    totalExpense += item;
+  });
+  console.log(arrayExpense);
+  console.log(totalExpense);
+  const calculatedProfit = totalIncome - totalExpense;
+
+  console.log(calculatedProfit);
+  const percentage = (calculatedProfit * 100) / profitValue;
+  console.log(percentage);
+  const dataToSend = { totalIncome: totalIncome, totalExpense: totalExpense, profit_calculated: calculatedProfit};
+
+  try {
+    const dataToSend = {
+      totalIncome: totalIncome,
+      totalExpense: totalExpense,
+      profit_calculated: calculatedProfit
+    };
+  
+    const res =  Axios.put(
+      "http://localhost:8000/api/goal",
+      {
+        totalIncome: totalIncome,
+        totalExpense: totalExpense,
+        profit_calculated: calculatedProfit
+      },
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer " + localStorage.getItem("token"),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  
+    console.log(res.data);
+  } catch (error) {
+    console.error(error);
+  }
   const handleSaveRowEdits = useCallback(
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
@@ -332,8 +443,8 @@ const Goal = () => {
   return (
     <>
       <Box className="bar">
-        <BorderLinearProgress variant="determinate" value={50} />
-        <p className="percentage">50%</p>
+        <BorderLinearProgress variant="determinate" value={percentage} />
+        <p className="percentage">{percentage}%</p>
       </Box>
       <MaterialReactTable
         displayColumnDefOptions={{
