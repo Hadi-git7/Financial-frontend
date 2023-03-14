@@ -22,29 +22,33 @@ import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 15,
-  borderRadius: 2,
-  [`&.${linearProgressClasses.colorPrimary}`]: {
-    backgroundColor:
-      theme.palette.grey[theme.palette.mode === "light" ? 200 : 800],
-  },
-  [`& .${linearProgressClasses.bar}`]: {
-    borderRadius: 2,
-    backgroundColor: theme.palette.mode === "light" ? "#1a90ff" : "#308fe8",
-  },
-}));
+
 
 const Goal = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [profitDate, setProfitDate] = useState([]);
+  const [profitID, setProfitID] = useState([]);
   const [filterIncome, setFilterIncome] = useState([]);
   const [filterExpense, setFilterExpense] = useState([]);
   const [yearExpense, setYearExpense] = useState([]);
   const [yearIncome, setYearIncome] = useState([]);
   const [profitValue, setProfitValue] = useState([]);
+  
+
+  const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 15,
+    borderRadius: 2,
+    [`&.${linearProgressClasses.colorPrimary}`]: {
+      backgroundColor:
+        theme.palette.grey[theme.palette.mode === "light" ? 200 : 800],
+    },
+    [`& .${linearProgressClasses.bar}`]: {
+      borderRadius: 2,
+      backgroundColor: theme.palette.mode === "light" ? "#1a90ff" : "#308fe8",
+    },
+  }));
 
   useEffect(() => {
     let isMounted = true; // set a flag to check if the component is mounted
@@ -52,18 +56,25 @@ const Goal = () => {
     fetchData();
     incomedata();
     expdata();
+    
 
     return () => {
       isMounted = false; // set the flag to false when the component unmounts
     };
   }, []);
 
-  const handleCreateNewRow = useCallback(
-    (values) => {
-      setTableData([...tableData, values]);
-    },
-    [tableData]
-  );
+  const handleCreateNewRow = useCallback(async (values) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/goal');
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const data = await response.json();
+      setTableData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -73,13 +84,16 @@ const Goal = () => {
       }
       const jsonData = await response.json();
       var profitdate = jsonData.map((item) => item.year);
+      var profitid = jsonData.map((item) => item.id);
       var profitvaluestring = jsonData.map((item) => item.profit);
       const profitvalue = parseFloat(profitvaluestring);
 
       console.log(profitvalue);
+      console.log(profitid);
       setProfitDate(profitdate);
       setTableData(jsonData);
       setProfitValue(profitvalue);
+      setProfitID(profitid);
     } catch (error) {
       console.error(error);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second and retry the function
@@ -191,35 +205,7 @@ const Goal = () => {
   console.log(calculatedProfit);
   const percentage = (calculatedProfit * 100) / profitValue;
   console.log(percentage);
-  const dataToSend = { totalIncome: totalIncome, totalExpense: totalExpense, profit_calculated: calculatedProfit};
-
-  try {
-    const dataToSend = {
-      totalIncome: totalIncome,
-      totalExpense: totalExpense,
-      profit_calculated: calculatedProfit
-    };
-  
-    const res =  Axios.put(
-      "http://localhost:8000/api/goal",
-      {
-        totalIncome: totalIncome,
-        totalExpense: totalExpense,
-        profit_calculated: calculatedProfit
-      },
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  
-    console.log(res.data);
-  } catch (error) {
-    console.error(error);
-  }
+ 
   const handleSaveRowEdits = useCallback(
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
@@ -337,24 +323,24 @@ const Goal = () => {
         enableSorting: false,
         size: 80,
       },
-      {
-        accessorKey: "totalIncome",
-        header: "Total Income",
-        size: 140,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
-      },
-      {
-        accessorKey: "totalExpense",
-        header: "Total Expense",
-        size: 140,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
-      },
+      // {
+      //   accessorKey: "totalIncome",
+      //   header: "Total Income",
+      //   size: 140,
+      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+      //     ...getCommonEditTextFieldProps(cell),
+      //     type: "number",
+      //   }),
+      // },
+      // {
+      //   accessorKey: "totalExpense",
+      //   header: "Total Expense",
+      //   size: 140,
+      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+      //     ...getCommonEditTextFieldProps(cell),
+      //     type: "number",
+      //   }),
+      // },
       {
         accessorKey: "profit",
         header: "Profit",
@@ -371,15 +357,15 @@ const Goal = () => {
           type: "number",
         }),
       },
-      {
-        accessorKey: "profit_calculated",
-        header: "Profit Calculated",
-        size: 80,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
-      },
+      // {
+      //   accessorKey: "profit_calculated",
+      //   header: "Profit Calculated",
+      //   size: 80,
+      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+      //     ...getCommonEditTextFieldProps(cell),
+      //     type: "number",
+      //   }),
+      // },
       {
         accessorKey: "admin_id",
         header: "Admin ID",
@@ -404,14 +390,14 @@ const Goal = () => {
           type: "string",
         }),
       },
-      {
-        accessorKey: "deleted_by",
-        header: "Deleted By",
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "string",
-        }),
-      },
+      // {
+      //   accessorKey: "deleted_by",
+      //   header: "Deleted By",
+      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+      //     ...getCommonEditTextFieldProps(cell),
+      //     type: "string",
+      //   }),
+      // },
     ],
     [getCommonEditTextFieldProps]
   );
@@ -442,10 +428,18 @@ const Goal = () => {
 
   return (
     <>
+     <div className="divv">
+        <p>0%</p>
+        <p>25%</p>
+        <p>50%</p>
+        <p>75%</p>
+        <p>100%</p>
+      </div>
       <Box className="bar">
         <BorderLinearProgress variant="determinate" value={percentage} />
-        <p className="percentage">{percentage}%</p>
+        <p className="percentage"> <span style={{color: "#308fe8"}}>Current Value:</span> {percentage}%</p>
       </Box>
+     
       <MaterialReactTable
         displayColumnDefOptions={{
           "mrt-row-actions": {
@@ -528,7 +522,6 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
           },
         }
       );
-      window.location.reload();
       onSubmit(values);
       onClose();
     } catch (err) {
