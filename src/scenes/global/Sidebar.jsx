@@ -138,14 +138,14 @@ const Sidebar = () => {
             />
           )}
                 <Item
-                    title="Income"
+                    title="Incomes"
                     to="/income"
                     icon={<ReceiptIcon />}
                     selected={selected}
                     setSelected={setSelected}
                 />
                 <Item
-                    title="Expense"
+                    title="Expenses"
                     to="/expense"
                     icon={<PointOfSaleIcon />}
                     selected={selected}

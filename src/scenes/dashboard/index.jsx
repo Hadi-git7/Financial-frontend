@@ -3,16 +3,13 @@ import { tokens } from "../../theme";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import FlagIcon from '@mui/icons-material/Flag';
 import Header from "../../components/Header";
-import LineChart from "../../components/LineChart";
 import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
 import React, { useCallback,useState,  useEffect } from 'react';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import CategoryIcon from '@mui/icons-material/Category';
 import PieChart from "../../components/PieChart";
-
-
-
+import LineChartComponent from "../../components/LineChart";
 
 
 const Dashboard = () => {
@@ -184,7 +181,7 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="1,325,134"
+            title={`$${totalIncome-totalExpense}`}
             subtitle="Profit"
             progress="0.80"
             increase="+43%"
@@ -202,6 +199,8 @@ const Dashboard = () => {
           gridColumn="span 8"
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
+          position="relative"
+
         >
           <Box
             mt="25px"
@@ -209,6 +208,9 @@ const Dashboard = () => {
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            position="absolute"
+            top="40%"
+            right="0px"
           >
             <Box>
               <Typography
@@ -223,14 +225,15 @@ const Dashboard = () => {
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                $59,342.32
+                {`$${totalIncome-totalExpense}`}
               </Typography>
             </Box>
          
           </Box>
-          <Box height="250px" mt="-20px">
-            <LineChart isDashboard={true} />
+          <Box height="250px" >
+            <LineChartComponent isDashboard={true} />
           </Box>
+          
         </Box>
 
         {/* Transactions */}
@@ -319,8 +322,7 @@ const Dashboard = () => {
             fontWeight="600"
             sx={{ padding: "30px 30px 0 30px" }}
           >
-            Sales Quantity
-          </Typography>
+Goal          </Typography>
           <Box height="250px" mt="-20px">
             <BarChart isDashboard={true} />
           </Box>

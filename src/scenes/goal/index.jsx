@@ -21,34 +21,90 @@ import { styled } from "@mui/material/styles";
 import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 15,
-  borderRadius: 2,
-  [`&.${linearProgressClasses.colorPrimary}`]: {
-    backgroundColor:
-      theme.palette.grey[theme.palette.mode === "light" ? 200 : 800],
-  },
-  [`& .${linearProgressClasses.bar}`]: {
-    borderRadius: 2,
-    backgroundColor: theme.palette.mode === "light" ? "#1a90ff" : "#308fe8",
-  },
-}));
+
+
 
 const Goal = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [profitDate, setProfitDate] = useState([]);
+  const [profitID, setProfitID] = useState([]);
+  const [filterIncome, setFilterIncome] = useState([]);
+  const [filterExpense, setFilterExpense] = useState([]);
+  const [yearExpense, setYearExpense] = useState([]);
+  const [yearIncome, setYearIncome] = useState([]);
+  const [profitValue, setProfitValue] = useState([]);
+
+
+  const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+    height: 15,
+    borderRadius: 2,
+    [`&.${linearProgressClasses.colorPrimary}`]: {
+      backgroundColor:
+        theme.palette.grey[theme.palette.mode === "light" ? 200 : 800],
+    },
+    [`& .${linearProgressClasses.bar}`]: {
+      borderRadius: 2,
+      backgroundColor: theme.palette.mode === "light" ? "#1a90ff" : "#308fe8",
+    },
+  }));
+
 
   useEffect(() => {
     let isMounted = true; // set a flag to check if the component is mounted
 
     fetchData();
+    incomedata();
+    expdata();
 
     return () => {
       isMounted = false; // set the flag to false when the component unmounts
     };
   }, []);
+
+  //   const fetchIncome = useCallback(async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:8000/api/income');
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch data');
+  //     }
+  //     const data = await response.json();
+  //     const totalAmount = data.reduce((acc, { amount }) => acc + parseFloat(amount), 0);
+  //     setTotaIncome(totalAmount); // assuming you have a state variable called "totalIncome"
+  //     setIncomes(data);
+  //     console.log(data)
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   fetchIncome();
+  // }, [fetchIncome]);
+
+  // const fetchExpenses = useCallback(async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:8000/api/expense');
+  //     if (!response.ok) {
+  //       throw new Error('Failed to fetch data');
+  //     }
+  //     const data = await response.json();
+  //     const totalAmount = data.reduce((acc, { amount }) => acc + parseFloat(amount), 0);
+  //     setTotalExpense(totalAmount); // assuming you have a state variable called "totalExpense"
+  //     setExpenses(data); // save all expenses data to state
+  //     console.log(data)
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }, []);
+  // useEffect(() => {
+  //   fetchExpenses();
+  // }, [fetchExpenses]);
 
   // const handleCreateNewRow = useCallback(
   //   (values) => {
@@ -65,7 +121,10 @@ const Goal = () => {
       }
       const data = await response.json();
       setTableData(data);
+      toast.success('Goal created successfully!');
+
     } catch (error) {
+      toast.error('Bad Creds');
       console.error(error);
     }
   }, []);
@@ -78,12 +137,24 @@ const Goal = () => {
         throw new Error("Network response was not ok");
       }
       const jsonData = await response.json();
-      // setData(jsonData);
+      var profitdate = jsonData.map((item) => item.year);
+      var profitid = jsonData.map((item) => item.id);
+      var profitvaluestring = jsonData.map((item) => item.profit);
+      const profitvalue = parseFloat(profitvaluestring);
+
+      console.log(profitvalue);
+      console.log(profitid);
+      setProfitDate(profitdate);
       setTableData(jsonData);
+      setProfitValue(profitvalue);
+      setProfitID(profitid);
     } catch (error) {
       console.error(error);
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second and retry the function
+      await fetchData();
     }
   };
+
 
   const handleSaveRowEdits = useCallback(
     async ({ exitEditingMode, row, values }) => {
@@ -116,7 +187,10 @@ const Goal = () => {
           newData[row.index] = data;
           setTableData(newData);
           exitEditingMode(); //required to exit editing mode and close modal
+          toast.success('Goal updated successfully!');
+
         } catch (error) {
+          toast.error('Bad Creds');
           console.error(error);
         }
       }
@@ -128,39 +202,43 @@ const Goal = () => {
     setValidationErrors({});
   };
 
-  const handleDeleteRow = useCallback(
-    async (row) => {
-      if (
-        !window.confirm(`Are you sure you want to delete ${row.original.id}`)
-      ) {
-        return;
-      }
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/goal/${row.original.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              Accept: "application/json",
-              Authorization: "Bearer " + localStorage.getItem("token"),
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  const handleDeleteRow = useCallback(async (row) => {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: `Are you sure you want to delete ${row.original.id}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+  
+    // SweetAlert handles the confirmation
+    try {
+      if (result.isConfirmed) {
+        const response = await fetch(`http://localhost:8000/api/goal/${row.original.id}`, {
+          method: 'DELETE',
+          headers: { 
+            'Accept': 'application/json', 
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+        });
         if (!response.ok) {
-          throw new Error("Failed to delete row");
+          throw new Error('Failed to delete row');
         }
-        // update local table data
-        const newData = [...tableData];
-        newData.splice(row.index, 1);
+        const newResponse = await fetch('http://localhost:8000/api/goal');
+        if (!newResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const newData = await newResponse.json();
         setTableData(newData);
-      } catch (error) {
-        console.error(error);
+        toast.success('Goal deleted successfully!');
       }
-    },
-    [tableData]
-  );
-
+    } catch (error) {
+      toast.error('Failed to delete Goal!');
+      console.error(error);
+    }
+  }, []);
   const getCommonEditTextFieldProps = useCallback(
     (cell) => {
       return {
@@ -192,6 +270,109 @@ const Goal = () => {
     [validationErrors]
   );
 
+  const incomedata = async () => {
+    try {
+      const income = await fetch("http://localhost:8000/api/income");
+      if (!income.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const yearinc = [];
+      const jsonincome = await income.json();
+      const incdate = jsonincome.map((item) => item.end_date);
+      const n = incdate.length;
+      for (let i = 0; i < n; i++) {
+        yearinc[i] = incdate[i].split("-")[0];
+      }
+      const filteredincome = jsonincome.map((item) => item.amount);
+      setFilterIncome(filteredincome);
+      setYearIncome(yearinc);
+      console.log(filteredincome);
+      console.log(yearinc);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const m = yearIncome.length;
+  const mm = filterIncome.length;
+  const indexinc = [];
+  const arrayIncomestring = [];
+  for (let i = 0; i < m; i++) {
+    if (yearIncome[i] == profitDate) {
+      indexinc[i] = i;
+    }
+  }
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < mm; j++) {
+      if (indexinc[i] == j) {
+        arrayIncomestring[j] = filterIncome[j];
+      }
+    }
+  }
+  const arrayIncome = [];
+  for (let i = 0; i < arrayIncomestring.length; i++) {
+    arrayIncome[i] = parseFloat(arrayIncomestring[i]);
+  }
+  let totalIncome = 0;
+
+  arrayIncome.forEach((item) => {
+    totalIncome += item;
+  });
+  console.log(arrayIncome);
+  console.log(totalIncome);
+
+  console.log(indexinc);
+  const expdata = async () => {
+    try {
+      const expense = await fetch("http://localhost:8000/api/expense");
+      if (!expense.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const yearexp = [];
+      const jsonexpense = await expense.json();
+      const expdate = jsonexpense.map((item) => item.end_date);
+      const n = expdate.length;
+      for (let i = 0; i < n; i++) {
+        yearexp[i] = expdate[i].split("-")[0];
+      }
+      const filteredexpanse = jsonexpense.map((item) => item.amount);
+      setFilterExpense(filteredexpanse);
+      setYearExpense(yearexp);
+      console.log(yearexp);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const p = yearExpense.length;
+  const pp = filterExpense.length;
+  const indexexp = [];
+  const arrayExpense = [];
+  for (let i = 0; i < p; i++) {
+    if (yearExpense[i] == profitDate) {
+      indexexp[i] = i;
+    }
+  }
+  console.log(indexexp);
+  for (let i = 0; i < p; i++) {
+    for (let j = 0; j < pp; j++) {
+      if (indexexp[i] == j) {
+        arrayExpense[j] = filterExpense[j];
+      }
+    }
+  }
+  let totalExpense = 0;
+
+  arrayExpense.forEach((item) => {
+    totalExpense += item;
+  });
+  console.log(arrayExpense);
+  console.log(totalExpense);
+  const calculatedProfit = totalIncome - totalExpense;
+
+  console.log(calculatedProfit);
+  const percentage = (calculatedProfit * 100) / profitValue;
+  console.log(percentage);
+
   const columns = useMemo(
     () => [
       {
@@ -201,24 +382,6 @@ const Goal = () => {
         enableEditing: false, //disable editing on this column
         enableSorting: false,
         size: 80,
-      },
-      {
-        accessorKey: "totalIncome",
-        header: "Total Income",
-        size: 140,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
-      },
-      {
-        accessorKey: "totalExpense",
-        header: "Total Expense",
-        size: 140,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
       },
       {
         accessorKey: "profit",
@@ -231,15 +394,6 @@ const Goal = () => {
       {
         accessorKey: "year",
         header: "Year",
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-          type: "number",
-        }),
-      },
-      {
-        accessorKey: "profit_calculated",
-        header: "Profit Calculated",
-        size: 80,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
           type: "number",
@@ -307,10 +461,18 @@ const Goal = () => {
 
   return (
     <>
+     <div className="divv">
+        <p>0%</p>
+        <p>25%</p>
+        <p>50%</p>
+        <p>75%</p>
+        <p>100%</p>
+      </div>
       <Box className="bar">
-        <BorderLinearProgress variant="determinate" value={50} />
-        <p className="percentage">50%</p>
+        <BorderLinearProgress variant="determinate" value={percentage} />
+        <p className="percentage"> <span style={{color: "#308fe8"}}>Current Value:</span> {percentage}%</p>
       </Box>
+     
       <MaterialReactTable
         displayColumnDefOptions={{
           "mrt-row-actions": {
@@ -395,7 +557,11 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
       );
       onSubmit(values);
       onClose();
+      toast.success('Goal created successfully!');
+
     } catch (err) {
+      toast.error('Bad Creds');
+
       console.log("error ", err);
     }
   };

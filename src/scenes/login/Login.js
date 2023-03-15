@@ -12,6 +12,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import useToken from './useToken';
 import './Login.css'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 async function loginUser(credentials) {
   return fetch('http://localhost:8000/api/login', {
@@ -56,16 +59,21 @@ export default function Login() {
       localStorage.setItem('token', response.token);
       localStorage.setItem('is_super', response.is_super); // Save the is_super value in local storage
       window.location.reload();
+      toast.success('Logged in successfully!');
+
     } catch (error) {
       console.error('Error:', error);
-      alert('Error: Invalid Username or Password', );
+      toast.error('Bad Creds');
     }
   }
   
 
   return(
+    
   
     <div class="container">
+          <ToastContainer  position="bottom-right" />
+
       <Container class="screen">
         <Grid
           container

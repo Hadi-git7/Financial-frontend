@@ -16,11 +16,16 @@ import {
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
 import Topbar from '../global/Topbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+
 
 const Admins = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  
 
 
   
@@ -99,8 +104,12 @@ const Admins = () => {
         const newData = [...tableData];
         newData[row.index] = data;
         setTableData(newData);
+        toast.success('Admin updated successfully!');
+
         exitEditingMode(); //required to exit editing mode and close modal
       } catch (error) {
+        toast.error('Bad Creds!');
+
         console.error(error);
       }
     }
@@ -112,29 +121,42 @@ const Admins = () => {
   }, []);
 
   const handleDeleteRow = useCallback(async (row) => {
-    if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
-      return;
-    }
-    try {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: `Are you sure you want to delete ${row.original.username}?`,
+    showCancelButton: true,
+    confirmButtonText: 'Delete',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true
+  });
+
+  // SweetAlert handles the confirmation
+  try {
+    if (result.isConfirmed) {
       const response = await fetch(`http://localhost:8000/api/admin/${row.original.id}`, {
         method: 'DELETE',
         headers: { 
           'Accept': 'application/json', 
           "Authorization": "Bearer " + localStorage.getItem("token"),
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
       });
       if (!response.ok) {
         throw new Error('Failed to delete row');
       }
-      // update local table data
-      const newData = [...tableData];
-      newData.splice(row.index, 1);
+      const newResponse = await fetch('http://localhost:8000/api/admin');
+      if (!newResponse.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const newData = await newResponse.json();
       setTableData(newData);
-    } catch (error) {
-      console.error(error);
+      toast.success('Admin deleted successfully!');
     }
-  }, [tableData]);
+  } catch (error) {
+    toast.error('Failed to delete Admin!');
+    console.error(error);
+  }
+}, []);
 
   const getCommonEditTextFieldProps = useCallback((cell) => {
     return {
@@ -247,17 +269,14 @@ const Admins = () => {
           ...getCommonEditTextFieldProps(cell),
           type: 'password',
         }),
-      },
-      
- 
-  
-     
+      },    
     ],
     [getCommonEditTextFieldProps],
   );
 
   return (
     <>
+    <ToastContainer  position="bottom-right" />
     <Topbar />
       <MaterialReactTable
         displayColumnDefOptions={{
@@ -365,9 +384,13 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit, setTab
       fetchData();
       onSubmit(values);
       onClose();
+          toast.success('Admin created successfully!');
+
     
 	  }
     catch (err) {
+          toast.error('Bad Creds');
+
     console.log("error ",err);
   }
   };

@@ -13,6 +13,10 @@ import {
   Tooltip,
 } from '@mui/material';import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+
 
 
 const Categories = () => {
@@ -49,7 +53,9 @@ const handleCreateNewRow = useCallback(async (values) => {
     }
     const data = await response.json();
     setTableData(data);
+    toast.success('Category created successfully!');
   } catch (error) {
+    toast.error('Error creating category');
     console.error(error);
   }
 }, []);
@@ -81,7 +87,10 @@ const handleSaveRowEdits = useCallback(async ({ exitEditingMode, row, values }) 
       newData[row.index] = data;
       setTableData(newData);
       exitEditingMode(); //required to exit editing mode and close modal
+      toast.success('Category updated successfully!');
+
     } catch (error) {
+      toast.error('Bad Creds!');
       console.error(error);
     }
   }
@@ -92,28 +101,39 @@ const handleCancelRowEdits = useCallback(() => {
 }, []);
 
 const handleDeleteRow = useCallback(async (row) => {
-  if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
-    return;
-  }
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: `Are you sure you want to delete ${row.original.title}?`,
+    showCancelButton: true,
+    confirmButtonText: 'Delete',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true
+  });
+
+  // SweetAlert handles the confirmation
   try {
-    const response = await fetch(`http://localhost:8000/api/category/${row.original.id}`, {
-      method: 'DELETE',
-      headers: { 
-        'Accept': 'application/json', 
-        "Authorization": "Bearer " + localStorage.getItem("token"),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete row');
+    if (result.isConfirmed) {
+      const response = await fetch(`http://localhost:8000/api/category/${row.original.id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Accept': 'application/json', 
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete row');
+      }
+      const newResponse = await fetch('http://localhost:8000/api/category');
+      if (!newResponse.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const newData = await newResponse.json();
+      setTableData(newData);
+      toast.success('Category deleted successfully!');
     }
-    const newResponse = await fetch('http://localhost:8000/api/category');
-    if (!newResponse.ok) {
-      throw new Error('Failed to fetch data');
-    }
-    const newData = await newResponse.json();
-    setTableData(newData);
   } catch (error) {
+    toast.error('Failed to delete Category!');
     console.error(error);
   }
 }, []);
@@ -235,7 +255,7 @@ const Pop = useMemo(
 
 return (
   <>
-
+    <ToastContainer  position="bottom-right" />
     <MaterialReactTable
       displayColumnDefOptions={{
         'mrt-row-actions': {
@@ -267,11 +287,11 @@ return (
         </Box>
       )}
       renderTopToolbarCustomActions={() => (
-      <Button
+        <Button
           color="secondary"
           onClick={() => setCreateModalOpen(true)}
           variant="contained"
-      >
+        >
           Create New Category
         </Button>
       )}

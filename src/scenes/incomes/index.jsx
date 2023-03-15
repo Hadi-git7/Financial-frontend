@@ -15,11 +15,16 @@ import {
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import Axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Swal from 'sweetalert2';
+
 
 const Income = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  
   
 
 
@@ -54,7 +59,10 @@ const Income = () => {
       }
       const data = await response.json();
       setTableData(data);
+      // toast.success('Income created successfully!');
+
     } catch (error) {
+      // toast.error('Bad Creds');
       console.error(error);
     }
   }, []);
@@ -89,38 +97,52 @@ const Income = () => {
         newData[row.index] = data;
         setTableData(newData);
         exitEditingMode(); //required to exit editing mode and close modal
+        toast.success('Income updated successfully!');
+
       } catch (error) {
+        toast.error('Bad Creds');
         console.error(error);
       }
     }
   }, [tableData, validationErrors]);
 
   const handleDeleteRow = useCallback(async (row) => {
-    if (!window.confirm(`Are you sure you want to delete ${row.original.id}`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: `Are you sure you want to delete ${row.original.title}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+  
+    // SweetAlert handles the confirmation
     try {
-      const response = await fetch(`http://localhost:8000/api/income/${row.original.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json', 
-          "Authorization": "Bearer " + localStorage.getItem("token"),
-          "Content-Type": "application/json",
+      if (result.isConfirmed) {
+        const response = await fetch(`http://localhost:8000/api/income/${row.original.id}`, {
+          method: 'DELETE',
+          headers: { 
+            'Accept': 'application/json', 
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete row');
         }
-      
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete row');
+        const newResponse = await fetch('http://localhost:8000/api/income');
+        if (!newResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const newData = await newResponse.json();
+        setTableData(newData);
+        toast.success('Income deleted successfully!');
       }
-      // update local table data
-      const newData = [...tableData];
-      newData.splice(row.index, 1);
-      setTableData(newData);
     } catch (error) {
+      toast.error('Failed to delete Income!');
       console.error(error);
     }
-  }, [tableData]);
+  }, []);
 
 
   const handleCancelRowEdits = () => {
@@ -354,6 +376,7 @@ const Income = () => {
 
   return (
     <>
+        <ToastContainer  position="bottom-right" />
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {
@@ -438,7 +461,11 @@ export const CreateNewAccountModal = ({ open, columns, onClose, onSubmit }) => {
   
       onSubmit(values);
       onClose();
+      toast.success('Income created successfully!');
+
     } catch (err) {
+      toast.error('Bad Creds');
+
       console.log("error ", err);
     }
   };
